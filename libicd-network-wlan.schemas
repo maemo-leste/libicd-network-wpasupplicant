@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<gconfschemafile>
+	<schemalist>
+		<schema>
+			<key>/schemas/system/osso/connectivity/network_type/WLAN_ADHOC/network_modules</key>
+			<applyto>/system/osso/connectivity/network_type/WLAN_ADHOC/network_modules</applyto>
+			<owner>libicd_network_wlan</owner>
+			<type>list</type>
+			<list_type>string</list_type>
+			<default>[libicd_network_eap.so,libicd_network_wlan.so,libicd_network_ipv4.so]</default>
+			<locale name="C">
+				<short>WLAN_ADHOC network modules</short>
+				<long>Name of the network modules needed for WLAN_ADHOC network type</long>
+			</locale>			
+		</schema>
+		<schema>
+			<key>/schemas/system/osso/connectivity/network_type/WLAN_INFRA/network_modules</key>
+			<applyto>/system/osso/connectivity/network_type/WLAN_INFRA/network_modules</applyto>
+			<owner>libicd_network_wlan</owner>
+			<type>list</type>
+			<list_type>string</list_type>
+			<default>[libicd_network_eap.so,libicd_network_wps.so,libicd_network_wlan.so,libicd_network_ipv4.so]</default>
+			<locale name="C">
+				<short>WLAN_INFRA network modules</short>
+				<long>Name of the network modules needed for WLAN_INFRA network type</long>
+			</locale>			
+		</schema>
+	</schemalist>
+</gconfschemafile>
