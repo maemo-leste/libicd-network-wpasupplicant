@@ -475,7 +475,7 @@ static int check_security_method(struct wlan_context *ctx,
 
 
 /* ------------------------------------------------------------------------- */
-static dbus_bool_t check_security_algorithm(dbus_uint32_t capabilities)
+static dbus_bool_t check_security_algorithm(struct wlan_context *ctx, dbus_uint32_t capabilities)
 {
 	dbus_uint32_t unicast_algorithm = capabilities & WLANCOND_ENCRYPT_ALG_MASK;
 	dbus_uint32_t multicast_algorithm = capabilities & WLANCOND_ENCRYPT_GROUP_ALG_MASK;
@@ -487,6 +487,13 @@ static dbus_bool_t check_security_algorithm(dbus_uint32_t capabilities)
 	   check_security_method(), so we can trust it */
 	if (!(security_method & (WLANCOND_WPA_PSK | WLANCOND_WPA_EAP))) {
 		/* no need to check encryption algorithm */
+		EXIT;
+		return TRUE;
+	}
+
+	if (get_iap_config_bool(ctx->gconf_client, NULL, "allow_wep_ciphers_in_WPA", FALSE))
+	{
+		ILOG_DEBUG(WLAN "All ciphers allowed by the user");
 		EXIT;
 		return TRUE;
 	}
@@ -1445,7 +1452,7 @@ static dbus_bool_t wlan_get_scan_result(DBusConnection *conn,
 							ILOG_INFO(WLAN "%s: AP security method not supported, capability = 0x%x", id->name, cap_bits);
 						}
 
-					} else if (check_security_algorithm(cap_bits) == FALSE) {
+					} else if (check_security_algorithm(ctx, cap_bits) == FALSE) {
 						known = FALSE;
 						ILOG_INFO(WLAN "%s: AP security algorithm not supported (0x%x)", id->name, cap_bits);
 
@@ -2183,7 +2190,7 @@ static dbus_bool_t setup_wlan(struct wlan_context *ctx,
 		goto cleanup;
 	}
 
-	if (check_security_algorithm(capabilities) == FALSE) {
+	if (check_security_algorithm(ctx, capabilities) == FALSE) {
 		ILOG_INFO(WLAN "%s: AP security algorithm not supported (0x%x)",
 			  conv_network_id, capabilities);
 		error_set(&ctx->error,

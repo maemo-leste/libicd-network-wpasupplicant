@@ -1,9 +1,16 @@
-libicd-network-wlan (0.80+0m5) unstable; urgency=low
+libicd-network-wlan (0.80+fremantle1+0m5) unstable; urgency=low
 
   * This entry has been added by BIFH queue processor
-    Suffix +0m5 added to package revision
+    version has been changed to 0.80+fremantle1+0m5
 
- -- Antti Julku <ext-antti.julku@nokia.com>  Thu, 10 Dec 2009 16:37:59 +0200
+ -- Antti Julku <ext-antti.julku@nokia.com>  Thu, 24 Jun 2010 11:33:19 +0300
+
+libicd-network-wlan (0.80+fremantle1) unstable; urgency=low
+
+  * Fixes: NB#159196 - Add support for WEP cipher in WPA mode
+    to support Eduroam
+
+ -- Markus Silvan <ext-markus.p.silvan@nokia.com>  Tue, 01 Jun 2010 15:46:54 +0300
 
 libicd-network-wlan (0.80) unstable; urgency=low
 
