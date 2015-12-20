@@ -36,6 +36,8 @@
 #include <osso-ic-gconf.h>
 #include <icd/icd_log.h>
 
+#include <maemosec_certman.h>
+
 #include "libicd-network-wlan-dev.h"
 #include "wlan.h"
 #include "icd-common-utils.h"
@@ -1084,12 +1086,84 @@ static void clear_ssid_hash_table(struct wlan_context *ctx)
 }
 
 /* ------------------------------------------------------------------------- */
+#define EAP_GTC			6
+#define EAP_TLS			13
+#define EAP_TTLS		21
+#define EAP_PEAP		25
+#define EAP_MS			26
+#define EAP_TTLS_PAP		98
+#define EAP_TTLS_MS		99
+#define DEFAULT_PASSWORD	"AeHi5ied"
 /**
- * Get autoconnect flag if WLAN is an open, WEP or WPA PSK infra network
- * @param capability wlancond capability bits
+ * Get autoconnect flag for WLAN WPA EAP infra network
+ * @param ctx Context
+ * @param iap_name IAP name
  * @return ICD_NW_ATTR_AUTOCONNECT if autoconnectable, 0 otherwise
  */
-static guint wlan_get_autoconnect (guint capability)
+static guint wlan_get_eap_autoconnect(struct wlan_context *ctx, const char *iap_name)
+{
+	maemosec_key_id key_id;
+	EVP_PKEY *pkey;
+	gchar *client_certificate_file;
+	gchar *password;
+	gboolean password_prompt;
+	gint eap_type, eap_inner_type;
+
+	if (!iap_name)
+		return 0;
+
+	/* Check for supported EAP type */
+	eap_type = get_iap_config_int(ctx->gconf_client, iap_name, "EAP_default_type");
+	if (eap_type != EAP_TLS && eap_type != EAP_TTLS && eap_type != EAP_PEAP)
+		return 0;
+
+	/* Check for supported inner EAP type */
+	eap_inner_type = get_iap_config_int(ctx->gconf_client, iap_name, "PEAP_tunneled_eap_type");
+	if (eap_type == EAP_TTLS && eap_inner_type != EAP_GTC && eap_inner_type != EAP_MS && eap_inner_type != EAP_TTLS_PAP && eap_inner_type != EAP_TTLS_MS)
+		return 0;
+	if (eap_type == EAP_PEAP && eap_inner_type != EAP_GTC && eap_inner_type != EAP_MS)
+		return 0;
+
+	/* Check if we have password for inner EAP type */
+	if (eap_type == EAP_TTLS || eap_type == EAP_PEAP) {
+		if (eap_inner_type == EAP_GTC) {
+			password = get_iap_config_string(ctx->gconf_client, iap_name, "EAP_GTC_passcode");
+			if (!password || !password[0])
+				return 0;
+		} else {
+			password_prompt = get_iap_config_bool(ctx->gconf_client, iap_name, "EAP_MSCHAPV2_password_prompt", FALSE);
+			if (password_prompt)
+				return 0;
+			password = get_iap_config_string(ctx->gconf_client, iap_name, "EAP_MSCHAPV2_password");
+			if (!password || !password[0])
+				return 0;
+		}
+	}
+
+	/* Check if we can decrypt private key for certificate */
+	client_certificate_file = get_iap_config_string(ctx->gconf_client, iap_name, "EAP_TLS_PEAP_client_certificate_file");
+	if (client_certificate_file && client_certificate_file[0]) {
+		if (maemosec_certman_str_to_key_id(client_certificate_file, key_id) != 0)
+			return 0;
+		if (maemosec_certman_retrieve_key(key_id, &pkey, DEFAULT_PASSWORD) != 0)
+			return 0;
+		g_free(pkey);
+	}
+
+	ILOG_INFO(WLAN "AUTOCONNECT flag for WLAN WPA EAP infra network with IAP \"%s\" is supported", iap_name);
+	return ICD_NW_ATTR_AUTOCONNECT;
+
+}
+
+/* ------------------------------------------------------------------------- */
+/**
+ * Get autoconnect flag if WLAN is an open, WEP or WPA PSK or WPA EAP infra network
+ * @param ctx Context
+ * @param capability wlancond capability bits
+ * @param iap_name IAP name
+ * @return ICD_NW_ATTR_AUTOCONNECT if autoconnectable, 0 otherwise
+ */
+static guint wlan_get_autoconnect(struct wlan_context *ctx, guint capability, const char *iap_name)
 {
   /* autoconnect to open, wep and wpa psk infra networks */
   if (capability & (WLANCOND_OPEN |
@@ -1097,6 +1171,10 @@ static guint wlan_get_autoconnect (guint capability)
 		    WLANCOND_WPA_PSK) &&
       capability & WLANCOND_INFRA)
     return ICD_NW_ATTR_AUTOCONNECT;
+
+  /* check autoconnect for wpa eap infra networks */
+  if ((capability & WLANCOND_WPA_EAP) && (capability & WLANCOND_INFRA))
+    return wlan_get_eap_autoconnect(ctx, iap_name);
 
   return 0;
 }
@@ -1154,7 +1232,7 @@ static void check_adhoc_networks(gpointer key,
 					       WLAN_ADHOC,
 					       nwattrs | 
 					       ICD_NW_ATTR_IAPNAME |
-					       wlan_get_autoconnect (id->capability),
+					       wlan_get_autoconnect (ctx, id->capability, id->id),
 					       id->id,
 					       0,
 					       0,
@@ -1471,7 +1549,7 @@ static dbus_bool_t wlan_get_scan_result(DBusConnection *conn,
 						       mode,
 						       nwattrs |
 						       ICD_NW_ATTR_IAPNAME |
-						       wlan_get_autoconnect(cap_bits),
+						       wlan_get_autoconnect(ctx, cap_bits, id->id),
 						       id->id,
 						       level,
 						       bsshex,
