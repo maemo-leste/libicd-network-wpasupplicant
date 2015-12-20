@@ -16,6 +16,7 @@ LDADD = \
 	@DBUS_GLIB_LIBS@ \
 	@GCONF_LIBS@ \
 	@CERTMAN_LIBS@ \
+	@ICD_LIBS@ \
 	@DMALLOC_LIBS@
 
 LDFLAGS = -avoid-version
@@ -23,7 +24,7 @@ LDFLAGS = -avoid-version
 plugindir = @icd_plugin_dir@
 plugin_LTLIBRARIES = libicd_network_wlan.la
 
-libicd_network_wlan_la_LIBADD = 
+libicd_network_wlan_la_LIBADD = $(LDADD)
 libicd_network_wlan_la_SOURCES = \
 	wlan.h wlan.c icd-common-utils.c icd-common-utils.h
 

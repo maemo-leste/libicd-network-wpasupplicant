@@ -60,7 +60,7 @@ AC_CHECK_HEADER(wlancond-dbus.h,
 	AC_MSG_RESULT(yes),
 	AC_MSG_ERROR([wlancond-dbus.h not found]))
 
-PKG_CHECK_MODULES(ICD, icd2 >= 0.1)
+PKG_CHECK_MODULES(ICD, icd2 >= 0.1 libicd2)
 AC_SUBST(ICD_CFLAGS)
 AC_SUBST(ICD_LIBS)
 icd_plugin_dir=$($PKG_CONFIG --variable=icdplugindir icd2)
