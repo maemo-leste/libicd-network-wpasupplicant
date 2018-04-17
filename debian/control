@@ -3,7 +3,6 @@ Section: net
 Priority: optional
 Maintainer: Jukka Rissanen <jukka.rissanen@nokia.com>
 Build-Depends: debhelper (>= 4.0.0), icd2-dev (>= 0.87+fremantle7),
- libicd2-dev (>= 0.87+fremantle7), osso-wlan-dev (>= 1.0.20),
  icd2-osso-ic-dev (>=0.37), libosso-dev (>= 1.11-1),
  libglib2.0-dev (>= 2.8.6-1osso5),  autotools-dev, libmaemosec-certman-dev,
  libdbus-glib-1-dev (>= 0.61-osso11), libgconf2-dev (>= 2.6.4.14-osso2)
@@ -20,7 +19,6 @@ Package: libicd-network-wlan-dev
 Section: devel
 Architecture: any
 Depends: ${shlibs:Depends}, icd2-dev (>= 0.87+fremantle7),
- osso-wlan-dev
 Description: Header file which contains wlan capability and icd attribute
  handling functions.
 
