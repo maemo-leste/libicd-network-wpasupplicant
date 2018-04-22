@@ -25,7 +25,7 @@
 			printf("DEBUG[%d]:%ld.%ld:%s:%s():%d: " fmt,	\
 			       getpid(),				\
 			       tv.tv_sec, tv.tv_usec,			\
-			       __FILE__, __FUNCTION__, __LINE__, args);	\
+			       __FILE__, __FUNCTION__, __LINE__, ##args);	\
 			fflush(stdout);					\
 		}							\
 	}while(0)
