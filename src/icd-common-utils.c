@@ -27,9 +27,11 @@
 #include <gconf/gconf-client.h>
 
 #include <osso-ic-gconf.h>
+#if 0
 #include <wlancond.h>
 #include <wlancond-dbus.h>
-#include <icd/icd_log.h>
+#endif
+#include <icd/support/icd_log.h>
 
 #include "icd-common-utils.h"
 
@@ -81,6 +83,8 @@ static guint wlan_security_to_capability(const gchar *security)
 	if (security == NULL)
 		return 0;
 
+/* XXX: WPASUPPLICANT */
+#if 0
 	if (!strncmp( security, "NONE", 4))
 		return WLANCOND_OPEN;
 
@@ -92,6 +96,7 @@ static guint wlan_security_to_capability(const gchar *security)
 
 	if (!strncmp(security, "WPA_EAP", 7))
 		return WLANCOND_WPA_EAP;
+#endif
 
 	return 0;
 }
@@ -481,11 +486,14 @@ gboolean icd_get_wlan_ssid_names(GHashTable **wlan_table)
 			id->is_hidden = is_hidden;
 			id->is_temporary = is_temporary;
 
+/* XXX: WPASUPPLICANT */
+#if 0
 			/* set additional bits according to type */
 			if (!strcmp("WLAN_INFRA", type_value))
 				id->capability |= WLANCOND_INFRA;
 			else if (!strcmp("WLAN_ADHOC", type_value))
 				id->capability |= WLANCOND_ADHOC;
+#endif
 
 			ILOG_DEBUG(WLAN "id=\"%s\", name=\"%s\", ssid=\"%s\", type=%s, cap=0x%x, hidden=%s, temp=%s, added=%s",
 				   gconf_name,

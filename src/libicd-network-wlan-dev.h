@@ -11,7 +11,9 @@
 
 #include <glib.h>
 #include <dbus/dbus.h>
+#if 0
 #include <wlancond.h>
+#endif
 #include <icd/network_api_defines.h>
 
 
@@ -123,6 +125,7 @@ static inline guint cap2nwattr(dbus_uint32_t cap, guint *nwattrs)
 	guint oldval = *nwattrs;
 
 	*nwattrs &= ~ICD_NW_ATTR_LOCALMASK; /* clear old capabilities */
+#if 0
         *nwattrs |=
 #ifdef WLANCOND_WPS_MASK
 		((cap & WLANCOND_WPS_MASK) << CAP_SHIFT_WPS) |
@@ -132,6 +135,8 @@ static inline guint cap2nwattr(dbus_uint32_t cap, guint *nwattrs)
 		((cap & WLANCOND_ENCRYPT_WPA2_MASK) >> CAP_SHIFT_WPA2) |
 		((cap & WLANCOND_ENCRYPT_METHOD_MASK) >> CAP_SHIFT_METHOD) |
 		(cap & WLANCOND_MODE_MASK);
+
+#endif
 
 	return oldval;
 }

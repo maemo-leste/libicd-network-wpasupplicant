@@ -29,12 +29,15 @@
 #include <glib.h>
 #include <dbus/dbus.h>
 
+#if 0
 #include <wlancond.h>
 #include <wlancond-dbus.h>
+#endif
+
 #include <osso-ic.h>
 #include <osso-ic-dbus.h>
 #include <osso-ic-gconf.h>
-#include <icd/icd_log.h>
+#include <icd/support/icd_log.h>
 
 #include <maemosec_certman.h>
 
@@ -74,7 +77,7 @@ static dbus_bool_t find_ssid(struct wlan_context *ctx,
 /* to avoid double free */
 #define g_free_z(a) do { g_free(a); (a)=0; } while(0)
 
-int wlan_debug_level = 0;
+int wlan_debug_level = 1;
 
 
 /* helper struct for remembering adhoc networks */
@@ -311,6 +314,8 @@ static enum icd_nw_levels map_rssi(int rssi)
 static dbus_int32_t get_tx_power(struct wlan_context *ctx)
 {
 	gint tx=0;
+/* XXX: WPASUPPLICANT */
+#if 0
 	GError *gerror = NULL;
 
 	ENTER;
@@ -326,6 +331,7 @@ static dbus_int32_t get_tx_power(struct wlan_context *ctx)
 
 	if (tx <= 0)
 		tx = WLANCOND_TX_POWER100;
+#endif
 
 	EXIT;
 	return tx;
@@ -336,7 +342,8 @@ static dbus_int32_t get_tx_power(struct wlan_context *ctx)
 static dbus_uint32_t parse_security_method(gchar *s)
 {
 	dbus_uint32_t result = 0;
-
+/* XXX: WPASUPPLICANT */
+#if 0
 	if (strcmp(s, "NONE") == 0) {
 		result = WLANCOND_OPEN;
 	} else if (strcmp(s, "WEP") == 0) {
@@ -346,6 +353,7 @@ static dbus_uint32_t parse_security_method(gchar *s)
 	} else if (strcmp(s, "WPA_EAP") == 0) {
 		result = WLANCOND_WPA_EAP;
 	}
+#endif
 
 	return result;
 }
@@ -355,6 +363,8 @@ static dbus_uint32_t parse_security_method(gchar *s)
 static dbus_uint32_t parse_wlan_type(gchar *s)
 {
 	dbus_uint32_t result = 0;
+/* XXX: WPASUPPLICANT */
+#if 0
 
 	if (strcmp(s, "AUTO") == 0) {
 		result = WLANCOND_AUTO;
@@ -363,7 +373,7 @@ static dbus_uint32_t parse_wlan_type(gchar *s)
 	} else if (strcmp(s, "WLAN_ADHOC") == 0) {
 		result = WLANCOND_ADHOC;
 	}
-
+#endif
 	return result;
 }
 
@@ -411,6 +421,8 @@ static int check_security_method(struct wlan_context *ctx,
 				 iap_wlan_error *error,
 				 gchar *iap_id)
 {
+/* XXX: WPASUPPLICANT */
+#if 0
 	gboolean wpa2_only;
 	dbus_uint32_t wpa2_enabled;
 	dbus_uint32_t method = capabilities & WLANCOND_ENCRYPT_METHOD_MASK;
@@ -472,6 +484,7 @@ static int check_security_method(struct wlan_context *ctx,
 
 	/* Everything is okay */
 	EXIT;
+#endif
 	return TRUE;
 }
 
@@ -479,6 +492,8 @@ static int check_security_method(struct wlan_context *ctx,
 /* ------------------------------------------------------------------------- */
 static dbus_bool_t check_security_algorithm(struct wlan_context *ctx, dbus_uint32_t capabilities)
 {
+/* XXX: WPASUPPLICANT */
+#if 0
 	dbus_uint32_t unicast_algorithm = capabilities & WLANCOND_ENCRYPT_ALG_MASK;
 	dbus_uint32_t multicast_algorithm = capabilities & WLANCOND_ENCRYPT_GROUP_ALG_MASK;
 	dbus_uint32_t security_method =	capabilities & WLANCOND_ENCRYPT_METHOD_MASK;
@@ -515,6 +530,7 @@ static dbus_bool_t check_security_algorithm(struct wlan_context *ctx, dbus_uint3
 	}
 
 	EXIT;
+#endif
 	return TRUE;
 }
 
@@ -522,6 +538,9 @@ static dbus_bool_t check_security_algorithm(struct wlan_context *ctx, dbus_uint3
 /* ------------------------------------------------------------------------- */
 static dbus_uint32_t get_security_algorithm(int capabilities)
 {
+	dbus_uint32_t result = 0;
+/* XXX: WPASUPPLICANT */
+#if 0
 	dbus_uint32_t supported_unicast_alg, supported_multicast_alg,
 		wpa2_enabled, result = 0;
 
@@ -550,6 +569,7 @@ static dbus_uint32_t get_security_algorithm(int capabilities)
 	}
 
 	EXIT;
+#endif
 	return result;
 }
 
@@ -606,6 +626,8 @@ static dbus_uint32_t choose_adhoc_channel(struct wlan_context *ctx,
 static char *get_mode_string(dbus_uint32_t cap)
 {
 	char *modestr;
+/* XXX: WPASUPPLICANT */
+#if 0
 
 	switch (cap & WLANCOND_MODE_MASK) {
 	case WLANCOND_INFRA:
@@ -618,6 +640,8 @@ static char *get_mode_string(dbus_uint32_t cap)
 		modestr = WLAN_INFRA;
 		break;
 	}
+#endif
+	modestr = WLAN_INFRA; /* XXX */
 
 	return modestr;
 }
@@ -626,6 +650,8 @@ static char *get_mode_string(dbus_uint32_t cap)
 /* ------------------------------------------------------------------------- */
 static int send_powersave_req(struct wlan_context *ctx)
 {
+/* XXX: WPASUPPLICANT */
+#if 0
 	DBusMessage *msg = NULL, *reply = NULL;
 	dbus_bool_t on = TRUE;
 	int ret = 0;
@@ -678,6 +704,8 @@ cleanup:
 
 	EXIT;
 	return ret;
+#endif
+	return 0;
 }
 
 
@@ -872,6 +900,7 @@ static int hex_to_binary(const char *from, char *to)
 
 
 /* ------------------------------------------------------------------------- */
+#if 0
 static dbus_bool_t add_wep_keys(struct wlan_context *ctx,
 				gchar *network_id,
 				int security_method,
@@ -974,6 +1003,7 @@ err_nomem:
 exit:
 	return result;
 }
+#endif
 
 
 /* ------------------------------------------------------------------------- */
@@ -999,6 +1029,9 @@ static void disconnect_cb(DBusPendingCall *pending, void *user_data)
 /* ------------------------------------------------------------------------- */
 static void setup_cb(DBusPendingCall *pending, void *user_data)
 {
+	ENTER;
+/* XXX: WPASUPPLICANT */
+#if 0
 	struct wlan_context *ctx = get_wlan_context_from_dbus(user_data);
 	DBusMessage *reply = NULL;
 	gchar *interface = 0;
@@ -1068,6 +1101,8 @@ cleanup:
 			ctx->link_up_cb = NULL;
 		}
 	}
+	EXIT;
+#endif
 	EXIT;
 }
 
@@ -1165,6 +1200,8 @@ static guint wlan_get_eap_autoconnect(struct wlan_context *ctx, const char *iap_
  */
 static guint wlan_get_autoconnect(struct wlan_context *ctx, guint capability, const char *iap_name)
 {
+/* XXX: WPASUPPLICANT */
+#if 0
   /* autoconnect to open, wep and wpa psk infra networks */
   if (capability & (WLANCOND_OPEN |
 		    WLANCOND_WEP |
@@ -1175,6 +1212,7 @@ static guint wlan_get_autoconnect(struct wlan_context *ctx, guint capability, co
   /* check autoconnect for wpa eap infra networks */
   if ((capability & WLANCOND_WPA_EAP) && (capability & WLANCOND_INFRA))
     return wlan_get_eap_autoconnect(ctx, iap_name);
+#endif
 
   return 0;
 }
@@ -1187,6 +1225,8 @@ static void check_adhoc_networks(gpointer key,
 				 gpointer value,
 				 gpointer user_data)
 {
+/* XXX: WPASUPPLICANT */
+#if 0
 	char *ssid = (char *)key;
 	struct wlan_ssid_info *info = (struct wlan_ssid_info *)value;
 	struct wlan_context *ctx = (struct wlan_context *)user_data;
@@ -1241,6 +1281,7 @@ static void check_adhoc_networks(gpointer key,
 			}
 		}
 	}
+#endif
 }
 
 
@@ -1304,6 +1345,8 @@ static dbus_bool_t wlan_get_scan_result(DBusConnection *conn,
 					DBusMessage *msg,
 					void *user_data)
 {
+/* XXX: WPASUPPLICANT */
+#if 0
 	struct wlan_context *ctx = get_wlan_context_from_dbus(user_data);
 	DBusMessageIter iter;
 	dbus_bool_t ret = TRUE;
@@ -1826,6 +1869,7 @@ bad_arguments:
 		  "Scan results have bad format");
 
 	EXIT;
+#endif
 	return FALSE;
 }
 
@@ -1901,6 +1945,7 @@ static dbus_bool_t wlan_connected(DBusConnection *conn,
 
 	ctx->interface = g_strdup(interface);
 
+#if 0
 	switch (ctx->capabilities & WLANCOND_ENCRYPT_METHOD_MASK) {
 	case WLANCOND_OPEN:
 	case WLANCOND_WEP:
@@ -1930,6 +1975,7 @@ static dbus_bool_t wlan_connected(DBusConnection *conn,
 			 ctx->capabilities & WLANCOND_ENCRYPT_METHOD_MASK);
 		break;
 	}
+#endif
 
 OUT:
 	EXIT;
@@ -2158,6 +2204,8 @@ static void wlan_take_down(const gchar *network_type,
 
 	ILOG_DEBUG(WLAN "[%s] link going down at %s", ctx->iap_name, interface_name);
 
+/* XXX: WPASUPPLICANT */
+#if 0
 	msg = dbus_message_new_method_call(WLANCOND_SERVICE,
 					   WLANCOND_REQ_PATH,
 					   WLANCOND_REQ_INTERFACE,
@@ -2203,6 +2251,7 @@ cleanup:
 		return;
 	}
 
+#endif
 	EXIT;
 	return;
 }
@@ -2223,8 +2272,10 @@ static dbus_bool_t setup_wlan(struct wlan_context *ctx,
 			      gchar *network_id,
 			      dbus_uint32_t capabilities)
 {
-	DBusMessage *msg = NULL;
+/* XXX: WPASUPPLICANT */
 	dbus_bool_t result = FALSE;
+#if 0
+	DBusMessage *msg = NULL;
 	dbus_uint32_t algorithm = 0, flags = 0;
 	dbus_int32_t txpower, mode, security_method, 
 		security_method_and_wps, wps;
@@ -2388,6 +2439,7 @@ cleanup:
 		dbus_message_unref(msg);
 
 	EXIT;
+#endif
 	return result;
 }
 
@@ -2408,8 +2460,10 @@ static dbus_bool_t find_ssid(struct wlan_context *ctx,
 			     gchar *ssid,
 			     iap_state state)
 {
-	DBusMessage *msg = NULL, *reply = NULL;
+/* XXX: WPASUPPLICANT */
 	dbus_bool_t result = FALSE;
+#if 0
+	DBusMessage *msg = NULL, *reply = NULL;
 	gboolean succesful = FALSE;
 	int tries = 0;
 	dbus_int32_t txpower = get_tx_power(ctx);
@@ -2524,6 +2578,7 @@ cleanup:
 		dbus_message_unref(msg);
 
 	EXIT;
+#endif
 	return result;
 }
 
@@ -2596,6 +2651,7 @@ static void wlan_bring_up(const gchar *network_type,
 	dbus_uint32_t mode, smethod, algorithm;
 
 	ENTER;
+#if 0
 
 	/* If there is connection already on, then close it first. */
 	if (ctx->state == STATE_CONNECTED) {
@@ -2900,6 +2956,7 @@ OUT:
 	} else {
 		ILOG_DEBUG(WLAN "link cb is %s", "NULL");
 	}
+#endif
 	EXIT;
 	return;
 }
@@ -2958,6 +3015,7 @@ static DBusHandlerResult handle_wlan_message(
 	DBusMessage *msg,
 	void *user_data)
 {
+#if 0
 	ENTER;
 
 	if (dbus_message_is_signal(msg,
@@ -2989,6 +3047,7 @@ static DBusHandlerResult handle_wlan_message(
 	}
 
 	EXIT;
+#endif
 	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
@@ -3002,6 +3061,7 @@ static DBusHandlerResult handle_wlan_message(
  */
 static gboolean wlan_bearer_init(struct wlan_context *ctx)
 {
+#if 0
 	static const char *wlan_path = "/com/nokia/wlancond/signal";
 	static struct DBusObjectPathVTable wlan_vtable = {
 		.message_function = &handle_wlan_message
@@ -3025,6 +3085,7 @@ static gboolean wlan_bearer_init(struct wlan_context *ctx)
 	}
 
 	EXIT;
+#endif
 	return TRUE;
 }
 
@@ -3106,6 +3167,7 @@ static dbus_bool_t scan_ssid(struct wlan_context *ctx,
 	ENTER;
 
 	ILOG_DEBUG(WLAN "[%s] Starting wlan scan", network_type ? network_type : "<any>");
+#if 0
 
 	for (tries = 0; tries < 5; tries++) {
 		error_clear(&ctx->error);
@@ -3207,6 +3269,7 @@ cleanup:
 		dbus_message_unref(reply);
 	if (msg != NULL)
 		dbus_message_unref(msg);
+#endif
 
 	EXIT;
 	return result;
@@ -3230,6 +3293,8 @@ static void wlan_statistics(const gchar *network_type,
 			    icd_nw_link_stats_cb_fn stats_cb,
 			    const gpointer link_stats_cb_token)
 {
+	ENTER;
+#if 0
 	struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
 	DBusMessage *msg = NULL;
@@ -3337,6 +3402,8 @@ out:
 	if (reply != NULL)
 		dbus_message_unref(reply);
 
+#endif
+	EXIT;
 	return;
 }
 
@@ -3359,6 +3426,7 @@ static void wlan_start_search (const gchar *network_type,
 	struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
 	ENTER;
+	ILOG_DEBUG(WLAN "STARTING SEARCH");
 
 	error_clear(&ctx->error);
 
@@ -3552,6 +3620,7 @@ gboolean icd_nw_init (struct icd_nw_api *network_api,
 	network_api->private = context;
 
 	/* setup dbus monitor etc. */
+	ILOG_DEBUG(WLAN "Made it almost the end of init");
 	return wlan_bearer_init(context);
 }
 
