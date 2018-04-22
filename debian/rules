@@ -18,7 +18,7 @@ else
 endif
 
 # default flags
-CFLAGS += -Wall -g -Werror
+CFLAGS += -Wall -g
 
 # nostrip option
 ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
