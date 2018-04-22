@@ -11,7 +11,7 @@ Standards-Version: 3.6.2
 Package: libicd-network-wlan
 Section: net
 Architecture: any
-Depends: icd2 (>= 0.55), ${shlibs:Depends}, ${misc:Depends}, icd2-network-wlan-config, libicd-network-ipv4, libicd-network-eap (>= 0.33)
+Depends: icd2 (>= 0.55), ${shlibs:Depends}, ${misc:Depends}, icd2-network-wlan-config, libicd-network-ipv4
 Description: ICd2 plugin for WLAN networking
  The WLAN plugin for ICd2 that provides WLAN networking
 
@@ -25,7 +25,7 @@ Description: Header file which contains wlan capability and icd attribute
 Package: libicd-network-wlan-dbg
 Section: net
 Architecture: any
-Depends: libicd-network-wlan (= ${Source-Version})
+Depends: libicd-network-wlan (= ${source:Version})
 Description: Debug symbols for ICd2 network wlan plugin
  .
 
