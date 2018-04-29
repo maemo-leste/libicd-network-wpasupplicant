@@ -1,0 +1,10 @@
+wpa-supplicant conversion task list:
+
+[ ] Rename package to libicd-network-wpasupplicant (from libicd-network-wlan)
+[ ] Implement scanning
+[ ] Implement network info getting
+[ ] Implement other icd2 interfaces
+[ ] Figure out how wpa_supplicant should be started
+[ ] Look at wpa_priv(8)
+[ ] Run valgrind over code
+[ ] Test mode complicated network setups (eduroam, ad-hoc...)
