@@ -26,7 +26,7 @@ plugin_LTLIBRARIES = libicd_network_wlan.la
 
 libicd_network_wlan_la_LIBADD = $(LDADD)
 libicd_network_wlan_la_SOURCES = \
-	wlan.h wlan.c icd-common-utils.c icd-common-utils.h
+	wlan.h wlan.c icd-common-utils.c icd-common-utils.h wpaicd.c wpaicd.h wpasupplicant-defs.h
 
 #clean: maintainer-clean
 #	-rm -rf *.o *.lo *.la Makefile Makefile.in

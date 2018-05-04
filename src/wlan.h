@@ -223,6 +223,11 @@ static inline struct wlan_context *get_wlan_context_from_gconf(void *user_data)
 	return (struct wlan_context *)user_data;
 }
 
+static inline struct wlan_context *get_wlan_context_from_wpaicd(void *user_data)
+{
+	return (struct wlan_context *)user_data;
+}
+
 
 /** @addtogroup wlan
  * @ingroup wlan_network_plugin

@@ -38,12 +38,15 @@
 #include <osso-ic-dbus.h>
 #include <osso-ic-gconf.h>
 #include <icd/support/icd_log.h>
+#include <icd/icd_wlan_defs.h>
 
 #include <maemosec_certman.h>
+
 
 #include "libicd-network-wlan-dev.h"
 #include "wlan.h"
 #include "icd-common-utils.h"
+#include "wpaicd.h"
 
 #ifdef DMALLOC_ENABLE
 #include <dmalloc.h>
@@ -59,8 +62,6 @@
 #define SCAN_TIMEOUT 30  /* temporarily increased to 30 secs because of the problems in r0v3r scanning */
 #endif
 #define WLAN_PRIORITY 20
-#define WLAN_INFRA "WLAN_INFRA"
-#define WLAN_ADHOC "WLAN_ADHOC"
 
 static void wlan_bring_up(const gchar *network_type,
 			  const guint network_attrs,
@@ -286,6 +287,49 @@ static void wlan_statistics(const gchar *network_type,
 	return;
 }
 
+static void wlan_search_network_added_cb (BssInfo* info, void* data) {
+	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
+
+    gchar* ssid = calloc((info->ssid_len+1), sizeof(char));
+    memcpy(ssid, info->ssid, info->ssid_len);
+    ssid[info->ssid_len] = '\0';
+
+    enum icd_nw_levels signal = map_rssi(info->signal);
+
+    guint network_attrs = 0;
+
+
+    /* TODO: WEP, WPA-EAP, and many, many more... */
+    if (info->rsn.keymgmt_wpa_psk ||
+        info->rsn.keymgmt_wpa_psk_sha256) {
+        network_attrs |= WLAN_SECURITY_WPA_PSK;
+    } else {
+        network_attrs |= WLAN_SECURITY_OPEN;
+    }
+
+
+    /* TODO USE INFO */
+    ctx->search_cb(ICD_NW_SEARCH_CONTINUE,
+                ssid,
+                info->infrastructure ? WLAN_TYPE_INFRA : WLAN_TYPE_ADHOC,
+				network_attrs, /* network attrs */
+                ssid, /* network_id */
+                signal, /* signal */
+                "AAAAAA", /* TODO station_id */
+                info->signal, /* dB */
+                ctx->search_cb_token);
+
+    /* XXX: free(ssid); */
+}
+
+static void wlan_search_scan_done_cb (int ret, void* data) {
+	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
+
+    wlan_scan_timeout(data);
+
+    ctx->search_cb = NULL;
+    ctx->search_cb_token = NULL;
+}
 
 /* ----------------------------------------------------------------------- */
 /**
@@ -307,21 +351,35 @@ static void wlan_start_search (const gchar *network_type,
 	ENTER;
 	ILOG_DEBUG(WLAN "STARTING SEARCH");
 
+    wpaicd_initiate_scan();
+
 	ctx->search_cb = search_cb;
 	ctx->search_cb_token = search_cb_token;
 
-    ctx->search_cb(ICD_NW_SEARCH_COMPLETE,
-               NULL,
-               NULL,
-               0,
-               NULL,
-               0,
-               NULL,
-               0,
+#if 0
+    ctx->search_cb(ICD_NW_SEARCH_CONTINUE,
+                "Testing 1 2 3",
+                WLAN_TYPE_INFRA,
+				0, /* network attrs */
+                "Testing 1 2 3", /* network_id */
+                ICD_NW_LEVEL_5, /* signal */
+                "AAAAAA", /* station_id */
+                -40, /* dB */
+                ctx->search_cb_token);
+#endif
+                
+#if 0
+ctx->search_cb(ICD_NW_SEARCH_CONTINUE,
+               id->name,
+               mode,
+               nwattrs | ICD_NW_ATTR_IAPNAME | wlan_get_autoconnect(ctx, cap_bits, id->id),
+               id->id,
+               level,
+               bsshex,
+               rssi,
                ctx->search_cb_token);
+#endif
 
-    ctx->search_cb = NULL;
-    ctx->search_cb_token = NULL;
 
 	EXIT;
 	return;
@@ -365,6 +423,8 @@ static void wlan_stop_search (gpointer *private)
 static void wlan_destruct(gpointer *private)
 {
 	ENTER;
+
+    wpaicd_free();
 
 	EXIT;
 }
@@ -412,6 +472,10 @@ gboolean icd_nw_init (struct icd_nw_api *network_api,
 	context->close_cb = close_cb;
 
 	network_api->private = context;
+
+    wpaicd_init();
+    wpaicd_set_network_added_cb(wlan_search_network_added_cb, (void*)context);
+    wpaicd_set_scan_done_cb(wlan_search_scan_done_cb, (void*)context);
 
     /* TODO: Check if we can communicate with wpa_supplicant? */
 	return TRUE;
