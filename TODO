@@ -1,10 +1,16 @@
 wpa-supplicant conversion task list:
 
 [ ] Rename package to libicd-network-wpasupplicant (from libicd-network-wlan)
-[ ] Implement scanning
-[ ] Implement network info getting
+[/] Implement scanning
+[/] Implement network info getting
 [ ] Implement other icd2 interfaces
 [ ] Figure out how wpa_supplicant should be started
 [ ] Look at wpa_priv(8)
 [ ] Run valgrind over code
 [ ] Test mode complicated network setups (eduroam, ad-hoc...)
+
+[ ] Re-add gconf support
+[ ] Make plugin work with gconf values
+[ ] Support loading values from gconf
+[ ] Be able to make wpasupplicant network configs from gconf
+[ ] Add network attrs and local attrs (local attrs can be passed to icd2, which are all wpa_supplicant attrs possible, but then stored in the local-attr part... I guess)
