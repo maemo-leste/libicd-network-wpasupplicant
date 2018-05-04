@@ -25,32 +25,92 @@
 
 #include "wpasupplicant-defs.h"
 
-#if 1
+#if 0
 #define _WPA_ICD_DEBUG
 #endif
 
+
+/*
+KeyMgmt as  Key management suite. Possible array elements: "wpa-psk", "wpa-eap", "wpa-none"
+Pairwise    as  Pairwise cipher suites. Possible array elements: "ccmp", "tkip"
+Group   s   Group cipher suite. Possible values are: "ccmp", "tkip", "wep104", "wep40" 
+*/
+typedef struct wpa {
+    /* TODO/XXX: Yes, this all fits in a single bitfield, and yes, it should be
+     * in a bitfield eventually, but not now. */
+
+    /* Array */
+    gboolean keymgmt_wpa_psk;
+    gboolean keymgmt_wpa_eap;
+    gboolean keymgmt_wpa_none;
+    
+    /* Array */
+    gboolean pairwise_ccmp;
+    gboolean pairwise_tkip;
+
+    /* One of */
+    gboolean group_ccmp;
+    gboolean group_tkip;
+    gboolean group_wep104;
+    gboolean group_wep40;
+} WpaInfo;
+
+/*
+KeyMgmt as  Key management suite. Possible array elements: "wpa-psk", "wpa-eap", "wpa-ft-psk", "wpa-ft-eap", "wpa-psk-sha256", "wpa-eap-sha256",
+Pairwise    as  Pairwise cipher suites. Possible array elements: "ccmp", "tkip"
+Group   s   Group cipher suite. Possible values are: "ccmp", "tkip", "wep104", "wep40"
+MgmtGroup   s   Mangement frames cipher suite. Possible values are: "aes128cmac" 
+*/
+typedef struct rsn {
+    /* TODO/XXX: Yes, this all fits in a single bitfield, and yes, it should be
+     * in a bitfield eventually, but not now. */
+
+    /* Array */
+    gboolean keymgmt_wpa_psk;
+    gboolean keymgmt_wpa_eap;
+    gboolean keymgmt_wpa_ft_psk;
+    gboolean keymgmt_wpa_ft_eap;
+    gboolean keymgmt_wpa_psk_sha256;
+    gboolean keymgmt_wpa_eap_sha256;
+
+    /* Array */
+    gboolean pairwise_ccmp;
+    gboolean pairwise_tkip;
+
+    /* One of */
+    gboolean group_ccmp;
+    gboolean group_tkip;
+    gboolean group_wep104;
+    gboolean group_wep40;
+
+    /* One of */
+    gboolean mgmtgroup_aes128cmac;
+} RsnInfo;
+
 typedef struct {
     guint16 frequency;
+
+    /* True if infrastructure, False if ad-hoc */
+    gboolean infrastructure;
 
     /* icd2 network_name */
     gchar* ssid;
     gsize ssid_len;
 
-    /* TODO: icd2 network_type: infra vs ad-hoc, etc */
-
     /* TODO: network_attrs */
 
-    /* icd2 network_id is also ssid */
-
-    /* icd2: signal (TODO: Map to proper icd2 values) */
     gint16 signal;
 
     /* icd2 station_id */
     gchar* mac_addr;
     gsize mac_addr_len;
 
-    /* TODO: icd2: dB - just raw signal? */
+    WpaInfo wpa;
+    RsnInfo rsn;
 } BssInfo;
+
+typedef void NetworkAdded(BssInfo*, void*);
+typedef void ScanDone(int, void*);
 
 #define _BSS_SIMPLE_INFO_FROM_DICT(gvar, keyname, structname, keytype, keytype2) \
 { \
@@ -69,7 +129,17 @@ typedef struct {
     g_variant_unref(var); \
 }
 
-int init_batt(void);
-void free_bat(void);
+#define _MATCH_SET(s1, s2, setv) \
+{ \
+    if (strncmp(s1, s2, strlen(s2)) == 0) { \
+        setv = 1; \
+    } \
+}
+
+int wpaicd_init(void);
+void wpaicd_free(void);
+int wpaicd_initiate_scan(void);
+void wpaicd_set_network_added_cb(NetworkAdded*, void*);
+void wpaicd_set_scan_done_cb(ScanDone*, void*);
 
 #endif /* _ICDWPA_H_ */
