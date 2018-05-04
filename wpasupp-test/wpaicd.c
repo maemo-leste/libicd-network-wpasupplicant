@@ -213,35 +213,35 @@ static void on_scan_done(GDBusProxy *proxy,
                gchar      *signal_name,
                GVariant   *parameters,
                gpointer    user_data) {
-	if (strcmp(signal_name, "ScanDone")) {
+    if (strcmp(signal_name, "ScanDone")) {
 #ifdef _WPA_ICD_DEBUG
-		fprintf(stderr, "Ignoring: %s\n", signal_name);
+        fprintf(stderr, "Ignoring: %s\n", signal_name);
 #endif
-		return;
+        return;
     }
 
-	/* TODO: Ensure everything is freed, GError checking, Gerror re-initialisation, etc */
-	/* TODO: Ensure that we properly deal with errors / missing values */
+    /* TODO: Ensure everything is freed, GError checking, Gerror re-initialisation, etc */
+    /* TODO: Ensure that we properly deal with errors / missing values */
 
 #ifdef _WPA_ICD_DEBUG
     fprintf(stderr, "on_scan_done. params: %s\n", g_variant_print(parameters, TRUE));
 #endif
 
-	GError *error = NULL;
+    GError *error = NULL;
 
-	GVariant* bsss = g_dbus_connection_call_sync(system_bus,
-			WPA_DBUS_SERVICE,
-			WPA_DBUS_INTERFACES_OPATH "/1",
-			DBUS_PROPERTIES_INTERFACE_NAME,
-			"Get",
-			g_variant_new("(ss)", WPA_DBUS_INTERFACES_INTERFACE, "BSSs"),
-			NULL,
-			G_DBUS_CALL_FLAGS_NONE,
-			-1,
-			NULL,
-			&error);
+    GVariant* bsss = g_dbus_connection_call_sync(system_bus,
+            WPA_DBUS_SERVICE,
+            WPA_DBUS_INTERFACES_OPATH "/1",
+            DBUS_PROPERTIES_INTERFACE_NAME,
+            "Get",
+            g_variant_new("(ss)", WPA_DBUS_INTERFACES_INTERFACE, "BSSs"),
+            NULL,
+            G_DBUS_CALL_FLAGS_NONE,
+            -1,
+            NULL,
+            &error);
 
-	if (bsss == NULL) {
+    if (bsss == NULL) {
         fprintf(stderr, "Could not get BSSs: %s\n", error->message);
         g_error_free(error);
         return;
@@ -253,16 +253,16 @@ static void on_scan_done(GDBusProxy *proxy,
     GVariantIter* iter;
     iter = g_variant_iter_new(tmp2);
 
-	for (unsigned int i = 0; i < g_variant_iter_n_children(iter); i++) {
-		GVariant *val;
-		val = g_variant_iter_next_value(iter);
+    for (unsigned int i = 0; i < g_variant_iter_n_children(iter); i++) {
+        GVariant *val;
+        val = g_variant_iter_next_value(iter);
 
-		const gchar* bss_path = g_variant_get_string(val, NULL);
-		BssInfo info;
+        const gchar* bss_path = g_variant_get_string(val, NULL);
+        BssInfo info;
 
         error = get_bss_info(bss_path, &info);
         if (error) {
-			fprintf(stderr, "Could not get BSS info for %s (%s)\n", bss_path, error->message);
+            fprintf(stderr, "Could not get BSS info for %s (%s)\n", bss_path, error->message);
             g_error_free(error);
 
             g_variant_unref(val);
@@ -274,12 +274,12 @@ static void on_scan_done(GDBusProxy *proxy,
         if (network_added_cb) {
             network_added_cb(&info, network_added_data);
         }
-	}
+    }
 
-	g_variant_iter_free(iter);
-	g_variant_unref(tmp);
-	g_variant_unref(tmp2);
-	g_variant_unref(bsss);
+    g_variant_iter_free(iter);
+    g_variant_unref(tmp);
+    g_variant_unref(tmp2);
+    g_variant_unref(bsss);
 
     if (scan_done_cb) {
         scan_done_cb(0 /* TODO */, scan_done_data);
@@ -298,13 +298,13 @@ int wpaicd_init(void) {
     }
 
     interface_proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-		G_DBUS_PROXY_FLAGS_NONE | G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-		NULL,
-		WPA_DBUS_SERVICE,
-		WPA_DBUS_INTERFACES_OPATH "/1",
-		WPA_DBUS_INTERFACES_INTERFACE,
-		NULL,
-		&error);
+        G_DBUS_PROXY_FLAGS_NONE | G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+        NULL,
+        WPA_DBUS_SERVICE,
+        WPA_DBUS_INTERFACES_OPATH "/1",
+        WPA_DBUS_INTERFACES_INTERFACE,
+        NULL,
+        &error);
 
     if (interface_proxy == NULL) {
         fprintf(stderr, "Could not create interface proxy: %s\n", error->message);
@@ -328,7 +328,7 @@ int wpaicd_initiate_scan(void) {
     g_variant_builder_add (b, "{sv}", "Type", g_variant_new_string ("active"));
 
     /* XXX: I think this already closes the builder? */
-	args = g_variant_new("(a{sv})", b);
+    args = g_variant_new("(a{sv})", b);
 
     g_dbus_connection_call_sync(system_bus,
                 WPA_DBUS_SERVICE,
