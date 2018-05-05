@@ -126,6 +126,7 @@ typedef void ScanDone(int, void*);
     const char* data = g_bytes_get_data(gb, &target_len); \
     target = malloc(sizeof(char)*target_len); \
     memcpy(target, data, sizeof(char)*target_len); \
+    g_bytes_unref(gb); \
     g_variant_unref(var); \
 }
 

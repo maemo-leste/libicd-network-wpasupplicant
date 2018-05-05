@@ -65,38 +65,41 @@ static void set_wpa_properties(GVariant *wpa, BssInfo *info) {
     GVariantDict wpa_dict;
     g_variant_dict_init(&wpa_dict, wpa);
 
-    GVariantIter * keymgmt;
+    GVariant* keymgmt = NULL;
+    GVariantIter keymgmtiter;
     gchar *keymgmts;
-    g_variant_dict_lookup(&wpa_dict, "KeyMgmt", "as", &keymgmt);
+    keymgmt = g_variant_dict_lookup_value(&wpa_dict, "KeyMgmt", G_VARIANT_TYPE_STRING_ARRAY);
 
-    while (g_variant_iter_loop(keymgmt, "s", &keymgmts)) {
+    g_variant_iter_init(&keymgmtiter, keymgmt);
+    while (g_variant_iter_loop(&keymgmtiter, "s", &keymgmts)) {
         _MATCH_SET(keymgmts, "wpa-psk", info->wpa.keymgmt_wpa_psk)
         _MATCH_SET(keymgmts, "wpa-eap", info->wpa.keymgmt_wpa_eap)
         _MATCH_SET(keymgmts, "wpa-none", info->wpa.keymgmt_wpa_none)
     }
+    g_variant_unref(keymgmt);
 
-    g_variant_iter_free(keymgmt);
-
-    GVariantIter * pairwise;
+    GVariant *pairwise;
+    GVariantIter pairwiseiter;
     gchar *pairwises;
-    g_variant_dict_lookup(&wpa_dict, "Pairwise", "as", &pairwise);
+    pairwise = g_variant_dict_lookup_value(&wpa_dict, "Pairwise", G_VARIANT_TYPE_STRING_ARRAY);
 
-    while (g_variant_iter_loop(pairwise, "s", &pairwises)) {
+    g_variant_iter_init(&pairwiseiter, pairwise);
+    while (g_variant_iter_loop(&pairwiseiter, "s", &pairwises)) {
         _MATCH_SET(pairwises, "ccmp", info->wpa.pairwise_ccmp)
         _MATCH_SET(pairwises, "tkip", info->wpa.pairwise_tkip)
     }
+    g_variant_unref(pairwise);
 
-    g_variant_iter_free(pairwise);
-
-    const gchar *group;
+    gchar *group;
     g_variant_dict_lookup(&wpa_dict, "Group", "s", &group);
-
     _MATCH_SET(group, "ccmp", info->wpa.group_ccmp)
     _MATCH_SET(group, "tkip", info->wpa.group_tkip)
     _MATCH_SET(group, "wep104", info->wpa.group_wep104)
     _MATCH_SET(group, "wep40", info->wpa.group_wep40)
+    free(group);
 
-    g_variant_dict_end(&wpa_dict);
+    GVariant *v = g_variant_dict_end(&wpa_dict);
+    g_variant_unref(v);
 
     return;
 }
@@ -105,45 +108,52 @@ static void set_rsn_properties(GVariant *rsn, BssInfo *info) {
     GVariantDict rsn_dict;
     g_variant_dict_init(&rsn_dict, rsn);
 
-    GVariantIter * keymgmt;
+    GVariant* keymgmt = NULL;
+    GVariantIter keymgmtiter;
     gchar *keymgmts;
-    g_variant_dict_lookup(&rsn_dict, "KeyMgmt", "as", &keymgmt);
+    keymgmt = g_variant_dict_lookup_value(&rsn_dict, "KeyMgmt", G_VARIANT_TYPE_STRING_ARRAY);
 
-    while (g_variant_iter_loop(keymgmt, "s", &keymgmts)) {
+    g_variant_iter_init(&keymgmtiter, keymgmt);
+    while (g_variant_iter_loop(&keymgmtiter, "s", &keymgmts)) {
         _MATCH_SET(keymgmts, "wpa-psk", info->rsn.keymgmt_wpa_psk)
         _MATCH_SET(keymgmts, "wpa-eap", info->rsn.keymgmt_wpa_eap)
         _MATCH_SET(keymgmts, "wpa-ft-psk", info->rsn.keymgmt_wpa_ft_psk)
         _MATCH_SET(keymgmts, "wpa-psk-sha256", info->rsn.keymgmt_wpa_psk_sha256)
         _MATCH_SET(keymgmts, "wpa-eap-sha256", info->rsn.keymgmt_wpa_eap_sha256)
     }
+    g_variant_unref(keymgmt);
 
-    g_variant_iter_free(keymgmt);
-
-    GVariantIter * pairwise;
+    GVariant *pairwise;
+    GVariantIter pairwiseiter;
     gchar *pairwises;
-    g_variant_dict_lookup(&rsn_dict, "Pairwise", "as", &pairwise);
+    pairwise = g_variant_dict_lookup_value(&rsn_dict, "Pairwise", G_VARIANT_TYPE_STRING_ARRAY);
 
-    while (g_variant_iter_loop(pairwise, "s", &pairwises)) {
+    g_variant_iter_init(&pairwiseiter, pairwise);
+    while (g_variant_iter_loop(&pairwiseiter, "s", &pairwises)) {
         _MATCH_SET(pairwises, "ccmp", info->rsn.pairwise_ccmp)
         _MATCH_SET(pairwises, "tkip", info->rsn.pairwise_tkip)
     }
+    g_variant_unref(pairwise);
 
-    g_variant_iter_free(pairwise);
-
-    const gchar *group;
+    gchar *group;
     g_variant_dict_lookup(&rsn_dict, "Group", "s", &group);
 
     _MATCH_SET(group, "ccmp", info->rsn.group_ccmp)
     _MATCH_SET(group, "tkip", info->rsn.group_tkip)
     _MATCH_SET(group, "wep104", info->rsn.group_wep104)
     _MATCH_SET(group, "wep40", info->rsn.group_wep40)
+    free(group);
 
-    const gchar *mgmtgroup;
-    g_variant_dict_lookup(&rsn_dict, "MgmtGroup", "s", &mgmtgroup);
+    if (g_variant_dict_contains(&rsn_dict, "MgmtGroup")) {
+        gchar *mgmtgroup;
+        g_variant_dict_lookup(&rsn_dict, "MgmtGroup", "s", &mgmtgroup);
 
-    _MATCH_SET(mgmtgroup, "aes128cmac", info->rsn.mgmtgroup_aes128cmac)
+        _MATCH_SET(mgmtgroup, "aes128cmac", info->rsn.mgmtgroup_aes128cmac)
+        free(mgmtgroup);
+    }
 
-    g_variant_dict_end(&rsn_dict);
+    GVariant *v = g_variant_dict_end(&rsn_dict);
+    g_variant_unref(v);
 
     return;
 }
@@ -163,7 +173,7 @@ static GError* get_bss_info(const gchar* bss_path, BssInfo *info) {
         NULL,
         &err);
 
-    if (bss == NULL) {
+    if (err != NULL) {
         return err;
     }
 
@@ -177,13 +187,14 @@ static GError* get_bss_info(const gchar* bss_path, BssInfo *info) {
     GVariantDict bss_info_dict;
     g_variant_dict_init(&bss_info_dict, bss_info);
 
-    const gchar *mode;
+    gchar *mode;
 
     _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Signal", &info->signal, G_VARIANT_TYPE_INT16, "n")
     _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Frequency", &info->frequency, G_VARIANT_TYPE_UINT16, "q")
 /* ad-hoc, infrastructure */
     _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Mode", &mode, G_VARIANT_TYPE_STRING, "s")
     info->infrastructure = strcmp(mode, "infrastructure") == 0;
+    free(mode);
 
     _BSS_BYTESTRING_FROM_DICT(&bss_info_dict, "SSID", info->ssid, info->ssid_len);
     _BSS_BYTESTRING_FROM_DICT(&bss_info_dict, "BSSID", info->mac_addr, info->mac_addr_len);
@@ -199,13 +210,20 @@ static GError* get_bss_info(const gchar* bss_path, BssInfo *info) {
     /* TODO: WPS */
     /* TODO: Privacy (?), Rates, Age */
 
-    g_variant_dict_end(&bss_info_dict);
+    GVariant *v = g_variant_dict_end(&bss_info_dict);
+    g_variant_unref(v);
 
     /* Clean up */
     g_variant_unref(bss_info);
     g_variant_unref(bss);
 
     return NULL;
+}
+
+static void destroy_bss_info(BssInfo *info) {
+    free(info->ssid);
+    free(info->mac_addr);
+    free(info);
 }
 
 static void on_scan_done(GDBusProxy *proxy,
@@ -258,22 +276,25 @@ static void on_scan_done(GDBusProxy *proxy,
         val = g_variant_iter_next_value(iter);
 
         const gchar* bss_path = g_variant_get_string(val, NULL);
-        BssInfo info;
+        BssInfo* info = calloc(1, sizeof(BssInfo));
 
-        error = get_bss_info(bss_path, &info);
+        error = get_bss_info(bss_path, info);
         if (error) {
             fprintf(stderr, "Could not get BSS info for %s (%s)\n", bss_path, error->message);
             g_error_free(error);
 
             g_variant_unref(val);
+            destroy_bss_info(info);
             continue;
         }
 
         g_variant_unref(val);
 
         if (network_added_cb) {
-            network_added_cb(&info, network_added_data);
+            network_added_cb(info, network_added_data);
         }
+
+        destroy_bss_info(info);
     }
 
     g_variant_iter_free(iter);
@@ -285,6 +306,45 @@ static void on_scan_done(GDBusProxy *proxy,
         scan_done_cb(0 /* TODO */, scan_done_data);
     }
 
+}
+
+int wpaicd_initiate_scan(void) {
+    GError *error = NULL;
+    GVariantBuilder *b;
+    GVariant *args = NULL;
+    GVariant *active = NULL;
+
+    active = g_variant_new_string ("active");
+
+    b = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+    g_variant_builder_add(b, "{sv}", "Type", active);
+
+    /* Do not need to be unref'd, call_sync does that apparently */
+    args = g_variant_new("(a{sv})", b);
+
+    g_variant_builder_unref(b);
+
+    GVariant *ret = g_dbus_connection_call_sync(system_bus,
+                WPA_DBUS_SERVICE,
+                WPA_DBUS_INTERFACES_OPATH "/1",
+                "fi.w1.wpa_supplicant1.Interface",
+                "Scan",
+                args,
+                NULL,
+                G_DBUS_CALL_FLAGS_NONE,
+                -1,
+                NULL,
+                &error);
+
+    if (error != NULL) {
+        fprintf(stderr, "Could not start scan: %s\n", error->message);
+        g_error_free(error);
+        return 1;
+    }
+
+    g_variant_unref(ret);
+
+    return 0;
 }
 
 int wpaicd_init(void) {
@@ -306,7 +366,7 @@ int wpaicd_init(void) {
         NULL,
         &error);
 
-    if (interface_proxy == NULL) {
+    if (error != NULL) {
         fprintf(stderr, "Could not create interface proxy: %s\n", error->message);
         g_error_free(error);
         return 1;
@@ -319,34 +379,9 @@ int wpaicd_init(void) {
     return 0;
 }
 
-int wpaicd_initiate_scan(void) {
-    GError *error = NULL;
-    GVariantBuilder *b;
-    GVariant *args = NULL;
-    
-    b = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
-    g_variant_builder_add (b, "{sv}", "Type", g_variant_new_string ("active"));
-
-    /* XXX: I think this already closes the builder? */
-    args = g_variant_new("(a{sv})", b);
-
-    g_dbus_connection_call_sync(system_bus,
-                WPA_DBUS_SERVICE,
-                WPA_DBUS_INTERFACES_OPATH "/1", 
-                "fi.w1.wpa_supplicant1.Interface",
-                "Scan",
-                args,
-                NULL,
-                G_DBUS_CALL_FLAGS_NONE,
-                -1,
-                NULL,
-                &error);
-
-    return 0;
-}
-
 void wpaicd_free(void) {
-    /* g_object_unref(private.proxy); */
+    g_object_unref(interface_proxy);
+    g_object_unref(system_bus);
 }
 
 void wpaicd_set_network_added_cb(NetworkAdded* cb, void* data) {
