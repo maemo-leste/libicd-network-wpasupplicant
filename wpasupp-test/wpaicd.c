@@ -226,6 +226,84 @@ static void destroy_bss_info(BssInfo *info) {
     free(info);
 }
 
+// TODO: Pass network config
+static char* add_network(void) {
+    GError* err = NULL;
+
+    GVariant* args;
+    GVariantBuilder *b;
+
+    b = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+
+    g_variant_builder_add(b, "{sv}", "ssid", g_variant_new_string("<SSID>"));
+    g_variant_builder_add(b, "{sv}", "psk", g_variant_new_string("<PSK>"));
+    g_variant_builder_add(b, "{sv}", "key_mgmt", g_variant_new_string("WPA-PSK"));
+
+    /* Do not need to be unref'd, call_sync does that apparently */
+    args = g_variant_new("(a{sv})", b);
+    g_variant_builder_unref(b);
+
+    GVariant* ret = g_dbus_connection_call_sync(system_bus,
+        WPA_DBUS_SERVICE,
+        WPA_DBUS_INTERFACES_OPATH "/1",
+        WPA_DBUS_INTERFACES_INTERFACE,
+        "AddNetwork",
+        args,
+        NULL,
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &err);
+
+    if (err != NULL) {
+        fprintf(stderr, "Could not add network: %s\n", err->message);
+        g_error_free(err);
+        return NULL;
+    }
+
+    //fprintf(stderr, "add_network: %s\n", g_variant_print(ret, TRUE));
+
+    char* path = NULL;
+    // add_network: (objectpath '/fi/w1/wpa_supplicant1/Interfaces/1/Networks/0',)
+    g_variant_get(ret, "(o)", &path);
+    g_variant_unref(ret);
+
+    return path;
+}
+
+static int select_network(const char* network_path) {
+    GError* err = NULL;
+
+    GVariant* args;
+
+    args = g_variant_new("(o)", network_path);
+
+    GVariant* ret = g_dbus_connection_call_sync(system_bus,
+        WPA_DBUS_SERVICE,
+        WPA_DBUS_INTERFACES_OPATH "/1",
+        WPA_DBUS_INTERFACES_INTERFACE,
+        "SelectNetwork",
+        args,
+        NULL,
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &err);
+
+    if (err != NULL) {
+        fprintf(stderr, "Could not select network: %s\n", err->message);
+        g_error_free(err);
+        return 1;
+    }
+
+    //fprintf(stderr, "select_network: %s\n", g_variant_print(ret, TRUE));
+
+    g_variant_unref(ret);
+
+    return 0;
+}
+
+
 static void on_scan_done(GDBusProxy *proxy,
                gchar      *sender_name,
                gchar      *signal_name,
@@ -418,7 +496,10 @@ int main_loop(void) {
     wpaicd_set_network_added_cb(wpaicd_test_network_added_cb, (void*)42);
     wpaicd_set_scan_done_cb(wpaicd_test_scan_done_cb, (void*)42);
 
-    wpaicd_initiate_scan();
+    //wpaicd_initiate_scan();
+    char* path = add_network();
+    select_network(path);
+    free(path);
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);

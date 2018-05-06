@@ -27,8 +27,10 @@
 #define WPA_DBUS_OPATH "/fi/w1/wpa_supplicant1"
 
 #define WPA_DBUS_INTERFACES_INTERFACE "fi.w1.wpa_supplicant1.Interface"
-#define WPA_DBUS_INTERFACES_OPATH "/fi/w1/wpa_supplicant1/Interfaces"
+#define WPA_DBUS_INTERFACES_NETWORK "fi.w1.wpa_supplicant1.Network"
 #define WPA_DBUS_BSS_INTERFACE "fi.w1.wpa_supplicant1.BSS"
+
+#define WPA_DBUS_INTERFACES_OPATH "/fi/w1/wpa_supplicant1/Interfaces"
 
 #define DBUS_PROPERTIES_INTERFACE_NAME "org.freedesktop.DBus.Properties"
 
