@@ -29,7 +29,6 @@
 #define _WPA_ICD_DEBUG
 #endif
 
-
 /*
 KeyMgmt as  Key management suite. Possible array elements: "wpa-psk", "wpa-eap", "wpa-none"
 Pairwise    as  Pairwise cipher suites. Possible array elements: "ccmp", "tkip"

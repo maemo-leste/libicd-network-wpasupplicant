@@ -25,9 +25,8 @@
 
 #include "wpaicd.h"
 
-#define TEST_INTERFACE "wlan0"
+#define TEST_INTERFACE_PATH WPA_DBUS_INTERFACES_OPATH "/1"
 
-/* TODO: Free system_bus in free_wpaicd */
 static GDBusConnection* system_bus = NULL;
 static GDBusProxy *interface_proxy = NULL;
 
@@ -245,7 +244,7 @@ static char* add_network(void) {
 
     GVariant* ret = g_dbus_connection_call_sync(system_bus,
         WPA_DBUS_SERVICE,
-        WPA_DBUS_INTERFACES_OPATH "/1",
+        TEST_INTERFACE_PATH,
         WPA_DBUS_INTERFACES_INTERFACE,
         "AddNetwork",
         args,
@@ -261,10 +260,7 @@ static char* add_network(void) {
         return NULL;
     }
 
-    //fprintf(stderr, "add_network: %s\n", g_variant_print(ret, TRUE));
-
     char* path = NULL;
-    // add_network: (objectpath '/fi/w1/wpa_supplicant1/Interfaces/1/Networks/0',)
     g_variant_get(ret, "(o)", &path);
     g_variant_unref(ret);
 
@@ -280,7 +276,7 @@ static int select_network(const char* network_path) {
 
     GVariant* ret = g_dbus_connection_call_sync(system_bus,
         WPA_DBUS_SERVICE,
-        WPA_DBUS_INTERFACES_OPATH "/1",
+        TEST_INTERFACE_PATH,
         WPA_DBUS_INTERFACES_INTERFACE,
         "SelectNetwork",
         args,
@@ -295,8 +291,6 @@ static int select_network(const char* network_path) {
         g_error_free(err);
         return 1;
     }
-
-    //fprintf(stderr, "select_network: %s\n", g_variant_print(ret, TRUE));
 
     g_variant_unref(ret);
 
@@ -327,7 +321,7 @@ static void on_scan_done(GDBusProxy *proxy,
 
     GVariant* bsss = g_dbus_connection_call_sync(system_bus,
             WPA_DBUS_SERVICE,
-            WPA_DBUS_INTERFACES_OPATH "/1",
+            TEST_INTERFACE_PATH,
             DBUS_PROPERTIES_INTERFACE_NAME,
             "Get",
             g_variant_new("(ss)", WPA_DBUS_INTERFACES_INTERFACE, "BSSs"),
@@ -390,12 +384,9 @@ int wpaicd_initiate_scan(void) {
     GError *error = NULL;
     GVariantBuilder *b;
     GVariant *args = NULL;
-    GVariant *active = NULL;
-
-    active = g_variant_new_string ("active");
 
     b = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
-    g_variant_builder_add(b, "{sv}", "Type", active);
+    g_variant_builder_add(b, "{sv}", "Type", g_variant_new_string("active"));
 
     /* Do not need to be unref'd, call_sync does that apparently */
     args = g_variant_new("(a{sv})", b);
@@ -404,7 +395,7 @@ int wpaicd_initiate_scan(void) {
 
     GVariant *ret = g_dbus_connection_call_sync(system_bus,
                 WPA_DBUS_SERVICE,
-                WPA_DBUS_INTERFACES_OPATH "/1",
+                TEST_INTERFACE_PATH,
                 "fi.w1.wpa_supplicant1.Interface",
                 "Scan",
                 args,
@@ -439,7 +430,7 @@ int wpaicd_init(void) {
         G_DBUS_PROXY_FLAGS_NONE | G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
         NULL,
         WPA_DBUS_SERVICE,
-        WPA_DBUS_INTERFACES_OPATH "/1",
+        TEST_INTERFACE_PATH,
         WPA_DBUS_INTERFACES_INTERFACE,
         NULL,
         &error);
