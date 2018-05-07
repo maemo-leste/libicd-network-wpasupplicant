@@ -1,4 +1,4 @@
-Source: libicd-network-wlan
+Source: libicd-network-wpasupplicant
 Section: net
 Priority: optional
 Maintainer: Jukka Rissanen <jukka.rissanen@nokia.com>
@@ -8,34 +8,34 @@ Build-Depends: debhelper (>= 4.0.0), icd2-dev (>= 0.87+fremantle7),
  libdbus-glib-1-dev (>= 0.61-osso11), libgconf2-dev (>= 2.6.4.14-osso2)
 Standards-Version: 3.6.2
 
-Package: libicd-network-wlan
+Package: libicd-network-wpasupplicant
 Section: net
 Architecture: any
-Depends: icd2 (>= 0.55), ${shlibs:Depends}, ${misc:Depends}, icd2-network-wlan-config, libicd-network-ipv4
+Depends: icd2 (>= 0.55), ${shlibs:Depends}, ${misc:Depends}, icd2-network-wpasupplicant-config, libicd-network-ipv4
 Description: ICd2 plugin for WLAN networking
  The WLAN plugin for ICd2 that provides WLAN networking
 
-Package: libicd-network-wlan-dev
+Package: libicd-network-wpasupplicant-dev
 Section: devel
 Architecture: any
 Depends: ${shlibs:Depends}, icd2-dev (>= 0.87+fremantle7),
 Description: Header file which contains wlan capability and icd attribute
  handling functions.
 
-Package: libicd-network-wlan-dbg
+Package: libicd-network-wpasupplicant-dbg
 Section: net
 Architecture: any
-Depends: libicd-network-wlan (= ${source:Version})
-Description: Debug symbols for ICd2 network wlan plugin
+Depends: libicd-network-wpasupplicant (= ${source:Version})
+Description: Debug symbols for ICd2 network wpasupplicant plugin
  .
 
-Package: icd2-network-wlan-config
+Package: icd2-network-wpasupplicant-config
 Section: net
 Architecture: any
 Depends: icd2 (>= 0.2)
 Description: WLAN networking components configuration
- The WLAN plugin configuration pkg that is needed by wlan network
- module (this is the schema file containing eap, wlan, ipv4
+ The WLAN plugin configuration pkg that is needed by wpasupplicant network
+ module (this is the schema file containing wpasupplicant
  and ipv6 module configuration)
 
 
