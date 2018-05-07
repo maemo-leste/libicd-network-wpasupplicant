@@ -118,7 +118,7 @@ binary-arch: build install
 	dh_installchangelogs
 	dh_install --sourcedir=debian/build -v
 	dh_link
-	dh_strip --dbg-package=libicd-network-wlan
+	dh_strip --dbg-package=libicd-network-wpasupplicant
 	dh_compress
 	dh_fixperms
 	dh_makeshlibs -V

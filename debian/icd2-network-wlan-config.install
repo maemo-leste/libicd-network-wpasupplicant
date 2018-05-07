@@ -1,2 +1,2 @@
-etc/gconf/schemas/libicd-network-wlan.schemas
+etc/gconf/schemas/libicd-network-wpasupplicant.schemas
 etc/osso-backup/restore.d/always
