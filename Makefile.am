@@ -7,9 +7,9 @@ MAINTAINERCLEANFILES = \
         config.guess config.sub acinclude.m4 aclocal.m4 \
         build-stamp configure-stamp stamp-h.in \
 	debian/substvars debian/files \
-	debian/libicd-network-wlan.postinst.debhelper \
-	debian/libicd-network-wlan.postrm.debhelper \
-	debian/libicd-network-wlan.substvars
+	debian/libicd-network-wpasupplicant.postinst.debhelper \
+	debian/libicd-network-wpasupplicant.postrm.debhelper \
+	debian/libicd-network-wpasupplicant.substvars
 
 DEPCLEANFILES = config.log configure
 
@@ -20,17 +20,17 @@ EXTRA_DIST = \
 	debian/control \
 	debian/copyright \
 	debian/rules \
-	debian/libicd-network-wlan.install \
-	debian/libicd-network-wlan-dev.install \
-	debian/icd2-network-wlan-config.install \
-	debian/icd2-network-wlan-config.postinst
+	debian/libicd-network-wpasupplicant.install \
+	debian/libicd-network-wpasupplicant-dev.install \
+	debian/icd2-network-wpasupplicant-config.install \
+	debian/icd2-network-wpasupplicant-config.postinst
 
 # dh_gconf does not work due to missing scripts, add schema manually
 gconfschemasdir = $(sysconfdir)/gconf/schemas
-dist_gconfschemas_DATA = libicd-network-wlan.schemas
+dist_gconfschemas_DATA = libicd-network-wpasupplicant.schemas
 
-libicdnetworkwlandevincludedir = $(includedir)
-libicdnetworkwlandevinclude_HEADERS = src/libicd-network-wlan-dev.h
+libicdnetworkwpasupplicantdevincludedir = $(includedir)
+libicdnetworkwpasupplicantdevinclude_HEADERS = src/libicd-network-wpasupplicant-dev.h
 
 # backup should really provide its directory in its .pc file
 backuprestoredir = $(sysconfdir)/osso-backup/restore.d/always
@@ -47,9 +47,9 @@ endif
 # get rid of debian build dirs
 maintainer-clean-local:
 	-rm -rf debian/build debian/tmp \
-		debian/libicd-network-wlan \
-		debian/libicd-network-wlan-dbg \
-		debian/icd2-network-wlan-config
+		debian/libicd-network-wpasupplicant \
+		debian/libicd-network-wpasupplicant-dbg \
+		debian/icd2-network-wpasupplicant-config
 
 deb: dist
 	-mkdir $(top_builddir)/debian-build

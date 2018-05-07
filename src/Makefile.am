@@ -22,10 +22,10 @@ LDADD = \
 LDFLAGS = -avoid-version
 
 plugindir = @icd_plugin_dir@
-plugin_LTLIBRARIES = libicd_network_wlan.la
+plugin_LTLIBRARIES = libicd_network_wpasupplicant.la
 
-libicd_network_wlan_la_LIBADD = $(LDADD)
-libicd_network_wlan_la_SOURCES = \
+libicd_network_wpasupplicant_la_LIBADD = $(LDADD)
+libicd_network_wpasupplicant_la_SOURCES = \
 	wlan.h wlan.c icd-common-utils.c icd-common-utils.h wpaicd.c wpaicd.h wpasupplicant-defs.h
 
 #clean: maintainer-clean
