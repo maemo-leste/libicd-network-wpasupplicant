@@ -1,6 +1,5 @@
 AC_INIT([ICD2 WLAN network plugin], patsubst(esyscmd([dpkg-parsechangelog | sed -n '/^Version: \(.*\)$/ {s//\1/;p}']), [
-]),[],[libicd-network-wlan])
-#AC_INIT([ICD2 WLAN network plugin],[0.1-1],[],[libicd-network-wlan])
+]),[],[libicd-network-wpasupplicant])
 
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE([foreign])
@@ -16,7 +15,7 @@ AC_PROG_LIBTOOL
 
 AC_HEADER_STDC
 
-if test foobar${libicd_network_wlan_use_debug} = foobaryes 
+if test foobar${libicd_network_wpasupplicant_use_debug} = foobaryes 
 then
     CFLAGS="$CFLAGS -ggdb -O0 -DDEBUG"
 else
@@ -52,13 +51,6 @@ AC_SUBST(GCONF_LIBS)
 PKG_CHECK_MODULES(CERTMAN, maemosec-certman)
 AC_SUBST(CERTMAN_CFLAGS)
 AC_SUBST(CERTMAN_LIBS)
-
-#AC_CHECK_HEADER(wlancond.h,
-#	AC_MSG_RESULT(yes),
-#	AC_MSG_ERROR([wlancond.h not found])) 
-#AC_CHECK_HEADER(wlancond-dbus.h,
-#	AC_MSG_RESULT(yes),
-#	AC_MSG_ERROR([wlancond-dbus.h not found]))
 
 PKG_CHECK_MODULES(ICD, icd2 >= 0.1)
 AC_SUBST(ICD_CFLAGS)
