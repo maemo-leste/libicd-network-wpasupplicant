@@ -415,6 +415,25 @@ static void wlan_stop_search (gpointer *private)
 	EXIT;
 }
 
+/* ------------------------------------------------------------------------- */
+/**
+ * Initialize GConfClient connection for icd_context.
+ * Creates default GConf client and preloads some of the required keys.
+ * @param ctx ICD context to initialize
+ * @retval TRUE Success
+ * @retval FALSE Failure
+ */
+static gboolean wlan_gconf_init(struct wlan_context *ctx)
+{
+    /* GConf init */
+    ctx->gconf_client = gconf_client_get_default();
+    if (ctx->gconf_client == NULL) {
+        ILOG_ERR(WLAN "%s", "Failed to connect to GConf");
+        return FALSE;
+    }
+    return TRUE;
+}
+
 
 /* ------------------------------------------------------------------------- */
 /**
@@ -425,6 +444,7 @@ static void wlan_destruct(gpointer *private)
 	ENTER;
 
     wpaicd_free();
+	/* TODO: Free context->gconf_client */
 
 	EXIT;
 }
@@ -473,9 +493,18 @@ gboolean icd_nw_init (struct icd_nw_api *network_api,
 
 	network_api->private = context;
 
-    wpaicd_init();
+    if (!wpaicd_init()) {
+        ILOG_ERR(WLAN "%s", "Failed to set up wpaicd");
+        g_free_z(context);
+        return FALSE;
+	}
     wpaicd_set_network_added_cb(wlan_search_network_added_cb, (void*)context);
     wpaicd_set_scan_done_cb(wlan_search_scan_done_cb, (void*)context);
+
+    if (!wlan_gconf_init(context)) {
+        g_free_z(context);
+        return FALSE;
+    }
 
     /* TODO: Check if we can communicate with wpa_supplicant? */
 	return TRUE;
