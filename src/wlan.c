@@ -493,7 +493,7 @@ gboolean icd_nw_init (struct icd_nw_api *network_api,
 
 	network_api->private = context;
 
-    if (!wpaicd_init()) {
+    if (wpaicd_init()) {
         ILOG_ERR(WLAN "%s", "Failed to set up wpaicd");
         g_free_z(context);
         return FALSE;
