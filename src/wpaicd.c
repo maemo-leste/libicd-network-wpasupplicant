@@ -226,7 +226,7 @@ static void destroy_bss_info(BssInfo *info) {
 }
 
 // TODO: Pass network config
-static char* add_network(void) {
+char* add_network(void) {
     GError* err = NULL;
 
     GVariant* args;
@@ -267,7 +267,33 @@ static char* add_network(void) {
     return path;
 }
 
-static int select_network(const char* network_path) {
+int remove_all_networks(void) {
+    GError* err = NULL;
+
+    GVariant* ret = g_dbus_connection_call_sync(system_bus,
+        WPA_DBUS_SERVICE,
+        TEST_INTERFACE_PATH,
+        WPA_DBUS_INTERFACES_INTERFACE,
+        "RemoveAllNetworks",
+        NULL,
+        NULL,
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &err);
+
+    if (err != NULL) {
+        fprintf(stderr, "Could not add network: %s\n", err->message);
+        g_error_free(err);
+        return 1;
+    }
+
+    g_variant_unref(ret);
+
+    return 0;
+}
+
+int select_network(const char* network_path) {
     GError* err = NULL;
 
     GVariant* args;
