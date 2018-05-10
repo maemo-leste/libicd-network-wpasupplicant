@@ -29,7 +29,9 @@
 #ifndef _GCONFMAP_H_
 #define _GCONFMAP_H_
 
-#include <osso-ic-gconf.h>
+#include <gio/gio.h>
+
+#include <gconf/gconf-client.h>
 
 /*
 TODO:
@@ -56,7 +58,7 @@ typedef struct {
     /* if (get_iap_config_bool(ctx->gconf_client, NULL, * "allow_wep_ciphers_in_WPA", FALSE)) */
     gboolean allow_wep_ciphers_in_WPA;
 
-} GconfNetworkPolicies;
+} GConfNetworkPolicies;
 
 
 typedef struct {
@@ -80,7 +82,7 @@ typedef struct {
 
     /* get_iap_config_string(ctx->gconf_client, iap_name, "EAP_TLS_PEAP_client_certificate_file"); */
     char* EAP_TLS_PEAP_client_certificate_file;
-} GconfNetworkWPAEAP 
+} GConfNetworkWPAEAP;
 
 typedef struct {
     /* key = get_iap_config_string(ctx->gconf_client, ctx->iap_name, keyname); */
@@ -91,38 +93,44 @@ typedef struct {
 
     /* default_key = get_iap_config_int(ctx->gconf_client, ctx->iap_name, * "wlan_wepdefkey"); */
     gint wlan_wepdefkey;
-} GconfNetworkWEP;
-
-typedef struct {
-    char* EAP_wpa_preshared_passphrase;
-} GconfNetworkWPAPSK;
+} GConfNetworkWEP;
 
 typedef struct {
     /* channel = get_iap_config_int(ctx->gconf_client, ctx->iap_name, * "wlan_adhoc_channel"); */
     gint wlan_adhoc_channel;
-} GconfNetworkAdhoc;
+} GConfNetworkAdhoc;
 
 typedef struct {
+	/* Passphrase to use with WPA_PSK security mode */
+    char* EAP_wpa_preshared_passphrase;
+} GConfNetworkWPAPSK;
+
+typedef struct {
+	/* Connection name */
+    char* name;
+
+	/* TODO: This should be a set of bytes, not string, since APs can contain, afaik, null chars */
+    char* wlan_ssid;
+
     /* One-of: "WLAN_INFRA", "WLAN_ADHOC" */
     char* type;
 
-    /* get_iap_config_string(ctx->gconf_client, ctx->iap_name, "wlan_security"); */
     /* One-of: "NONE", "WEP", "WPA_PSK", "WPA_EAP" */
     char* wlan_security;
 
-    /* get_iap_config_bytearray(ctx->gconf_client, ctx->iap_name, "wlan_ssid"); */
-    char* wlan_ssid;
-
-    GconfNetworkWPAEAP wpaeap_config;
-    GconfNetworkWPAPSK wpapsk_config;
-    GconfNetworkWEP wep_config;
-    GconfNetworkAdhoc adhoc_config;
-    GconfNetworkPolicies policy_config;
-} GconfNetwork;
+    GConfNetworkWPAEAP wpaeap_config;
+    GConfNetworkWPAPSK wpapsk_config;
+    GConfNetworkWEP wep_config;
+    GConfNetworkAdhoc adhoc_config;
+    GConfNetworkPolicies policy_config;
+} GConfNetwork;
 
 
-GconfNetwork get_gconf_network(GConfClient *client, const char* name);
-void gconf_network_to_XYZ(void);
+GConfNetwork* get_gconf_network(GConfClient *client, const char* name);
+GConfNetwork* alloc_gconf_network(void);
+void free_gconf_network(GConfNetwork* net);
+
+//void gconf_network_to_XYZ(void);
 
 
 #endif /* _GCONFMAP_H_ */
