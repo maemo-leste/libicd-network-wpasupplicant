@@ -36,6 +36,9 @@ static void* network_added_data = NULL;
 static ScanDone* scan_done_cb = NULL;
 static void* scan_done_data = NULL;
 
+static StateChange* state_change_cb = NULL;
+static void* state_change_data = NULL;
+
 static void print_bss_info(BssInfo info) {
     /* Print */
     fprintf(stderr, "signal: %d\n", info.signal);
@@ -323,12 +326,43 @@ int select_network(const char* network_path) {
     return 0;
 }
 
+static void property_changed(GVariant *params) {
+#ifdef _WPA_ICD_DEBUG
+    fprintf(stderr, "properties_changed: %s\n", g_variant_print(params, TRUE));
+#endif
 
+    GVariant *d = NULL;
+    GVariant *state = NULL;
+
+    d = g_variant_get_child_value(params, 0);
+
+    state = g_variant_lookup_value(d, "State", G_VARIANT_TYPE_STRING);
+
+    if (state) {
+        const char* state_s = g_variant_get_string(state, NULL);
+
+        if (state_change_cb) {
+            state_change_cb(state_s, state_change_data);
+        }
+
+        g_variant_unref(state);
+    }
+
+    g_variant_unref(d);
+}
+
+
+/* TODO: Rename function, split up for various signals */
 static void on_scan_done(GDBusProxy *proxy,
                gchar      *sender_name,
                gchar      *signal_name,
                GVariant   *parameters,
                gpointer    user_data) {
+    if (strcmp(signal_name, "PropertiesChanged") == 0) {
+        property_changed(parameters);
+        return;
+    }
+
     if (strcmp(signal_name, "ScanDone")) {
 #ifdef _WPA_ICD_DEBUG
         fprintf(stderr, "Ignoring: %s\n", signal_name);
@@ -470,7 +504,6 @@ int wpaicd_init(void) {
     g_signal_connect(interface_proxy, "g-signal",
                      G_CALLBACK(on_scan_done), NULL);
 
-
     return 0;
 }
 
@@ -489,6 +522,11 @@ void wpaicd_set_scan_done_cb(ScanDone* cb, void* data) {
     scan_done_data = data;
 }
 
+void wpaicd_set_state_change_cb(StateChange* cb, void* data) {
+    state_change_cb = cb;
+    state_change_data = data;
+}
+
 #if 0
 void wpaicd_test_network_added_cb(BssInfo* info, void* data) {
     print_bss_info(*info);
@@ -499,7 +537,19 @@ void wpaicd_test_network_added_cb(BssInfo* info, void* data) {
 void wpaicd_test_scan_done_cb(int ret, void* data) {
     fprintf(stderr, "scan done, ret: %d\n", ret);
 
+    char* path = add_network();
+    select_network(path);
+    free(path);
+/*
+    usleep(10 * 1000 * 1000);
+    remove_all_networks();
+*/
+
     return;
+}
+
+void wpaicd_test_state_change_cb(const char* state, void* data) {
+    fprintf(stderr, "state change: %s\n", state);
 }
 
 int main_loop(void) {
@@ -512,11 +562,9 @@ int main_loop(void) {
 
     wpaicd_set_network_added_cb(wpaicd_test_network_added_cb, (void*)42);
     wpaicd_set_scan_done_cb(wpaicd_test_scan_done_cb, (void*)42);
+    wpaicd_set_state_change_cb(wpaicd_test_state_change_cb, (void*)42);
 
-    //wpaicd_initiate_scan();
-    char* path = add_network();
-    select_network(path);
-    free(path);
+    wpaicd_initiate_scan();
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);

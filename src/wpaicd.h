@@ -110,6 +110,7 @@ typedef struct {
 
 typedef void NetworkAdded(BssInfo*, void*);
 typedef void ScanDone(int, void*);
+typedef void StateChange(const char *, void*);
 
 #define _BSS_SIMPLE_INFO_FROM_DICT(gvar, keyname, structname, keytype, keytype2) \
 { \
@@ -139,8 +140,10 @@ typedef void ScanDone(int, void*);
 int wpaicd_init(void);
 void wpaicd_free(void);
 int wpaicd_initiate_scan(void);
+
 void wpaicd_set_network_added_cb(NetworkAdded*, void*);
 void wpaicd_set_scan_done_cb(ScanDone*, void*);
+void wpaicd_set_state_change_cb(StateChange*, void*);
 
 char* add_network(void);
 int remove_all_networks(void);
