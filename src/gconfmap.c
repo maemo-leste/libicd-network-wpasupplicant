@@ -47,7 +47,6 @@ static gchar *get_iap_config_bytearray(GConfClient *gconf_client,
     value = gconf_client_get(gconf_client, key, error);
 	if ((value == NULL) || (*error != NULL)) {
 		g_free(key);
-		fprintf(stderr, "get_iap_config_string failed\n");
 		return NULL;
 	}
 
@@ -93,7 +92,6 @@ static gchar *get_iap_config_string(GConfClient *gconf_client,
 	/* TODO: What to do with error? Do not like hiding errors! */
     //check_gconf_error(&error);
 	if (*error != NULL) {
-		fprintf(stderr, "get_iap_config_string failed\n");
 		return NULL;
 	}
 
@@ -138,9 +136,11 @@ static char* get_iap_name_from_path(char *path) {
         last = cur;
     }
 
+    last = strdup(last);
+
     free(dup);
 
-    return strdup(last);
+    return last;
 }
 
 

@@ -32,7 +32,6 @@
 #include <gio/gio.h>
 
 #include <gconf/gconf-client.h>
-
 /*
 TODO:
    See:
@@ -135,8 +134,6 @@ GSList* get_gconf_networks(GConfClient *client);
 
 GConfNetwork* alloc_gconf_network(void);
 void free_gconf_network(GConfNetwork* net);
-
-//void gconf_network_to_XYZ(void);
 
 
 #endif /* _GCONFMAP_H_ */
