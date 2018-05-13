@@ -106,6 +106,9 @@ typedef struct {
 } GConfNetworkWPAPSK;
 
 typedef struct {
+    /* IAP name */
+    char* id;
+
 	/* Connection name */
     char* name;
 
@@ -127,6 +130,9 @@ typedef struct {
 
 
 GConfNetwork* get_gconf_network(GConfClient *client, const char* name);
+GConfNetwork* get_gconf_network_iapname(GConfClient *client, const char* iapname);
+GSList* get_gconf_networks(GConfClient *client);
+
 GConfNetwork* alloc_gconf_network(void);
 void free_gconf_network(GConfNetwork* net);
 

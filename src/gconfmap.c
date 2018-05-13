@@ -155,7 +155,7 @@ static char* get_iap_name_from_path(char *path) {
 	} \
 }
 
-GConfNetwork* get_gconf_network_rel(GConfClient *client, const char* iapname) {
+GConfNetwork* get_gconf_network_iapname(GConfClient *client, const char* iapname) {
     GConfNetwork* r = NULL;
     gchar* key = g_strdup_printf(ICD_GCONF_PATH "/%s", iapname);
     r = get_gconf_network(client, key);
