@@ -34,24 +34,22 @@
 /* TODO: pick better name */
 static gchar *get_iap_config_bytearray(GConfClient *gconf_client,
                        const char *iap_name,
-                       const char *key_name)
+                       const char *key_name,
+					   GError **error)
 {
     gchar *key, *ret = NULL;
-    GError *error = NULL;
     GConfValue *value;
     GSList *list, *entry;
     gint i;
 
-    key = g_strdup_printf(ICD_GCONF_PATH "/%s/%s", iap_name, key_name);
-    value = gconf_client_get(gconf_client, key, &error);
-    if (value == NULL) {
-/*
-TODO
-        check_gconf_error(&error);
-        g_free(key);
-*/
-        return NULL;
-    }
+    //key = g_strdup_printf(ICD_GCONF_PATH "/%s/%s", iap_name, key_name);
+    key = g_strdup_printf("%s/%s", iap_name, key_name);
+    value = gconf_client_get(gconf_client, key, error);
+	if ((value == NULL) || (*error != NULL)) {
+		g_free(key);
+		fprintf(stderr, "get_iap_config_string failed\n");
+		return NULL;
+	}
 
     switch (value->type) {
     case GCONF_VALUE_STRING:
@@ -70,7 +68,6 @@ TODO
     default:
 		;
 		/* TODO return/print error */
-        //ILOG_ERR("GConf error: Expected `string' or `list of int' for key %s", key);
     }
     gconf_value_free(value);
     g_free(key);
@@ -82,20 +79,22 @@ TODO
 /* TODO: pick better name */
 static gchar *get_iap_config_string(GConfClient *gconf_client,
                     const char *iap_name,
-                    const char *key_name)
+                    const char *key_name,
+					GError **error)
 {
+	/* TODO: Take pointer to GError ? */
     gchar *key, *value;
-    GError *error = NULL;
 
-    key = g_strdup_printf(ICD_GCONF_PATH "/%s/%s", iap_name, key_name);
-    value = gconf_client_get_string(gconf_client, key, &error);
+    key = g_strdup_printf("%s/%s", iap_name, key_name);
+    //key = g_strdup_printf(ICD_GCONF_PATH "/%s/%s", iap_name, key_name);
+    value = gconf_client_get_string(gconf_client, key, error);
     g_free(key);
 
 	/* TODO: What to do with error? Do not like hiding errors! */
     //check_gconf_error(&error);
-	if (error != NULL) {
-		fprintf(stderr, "Failed to get string value: %s\n", error->message);
-		g_error_free(error);
+	if (*error != NULL) {
+		fprintf(stderr, "get_iap_config_string failed\n");
+		return NULL;
 	}
 
     return value;
@@ -110,30 +109,37 @@ GConfNetwork* alloc_gconf_network(void) {
 }
 
 void free_gconf_network(GConfNetwork* net) {
+	/* TODO: Also free other values in the sub structs */
+	free(net->wpapsk_config.EAP_wpa_preshared_passphrase);
+	free(net->wlan_security);
 	free(net->name);
 	free(net->wlan_ssid);
 	free(net->type);
-	free(net->wlan_security);
 	free(net);
+}
+
+#define GCONF_IAP_READ(func, structvar, var) \
+{ \
+	net->structvar = func(client, name, var, &error); \
+	/* TODO: Print error as well? */ \
+	if (error != NULL) { \
+		g_error_free(error); \
+		free_gconf_network(net); \
+		return NULL; \
+	} \
 }
 
 GConfNetwork* get_gconf_network(GConfClient *client, const char* name) {
 	GConfNetwork* net = alloc_gconf_network();
+	GError *error = NULL;
 
-	net->type = get_iap_config_string(client, name, "type");
-	net->wlan_ssid = get_iap_config_bytearray(client, name, "wlan_ssid");
-	net->name = get_iap_config_string(client, name, "name");
-	net->wlan_security = get_iap_config_string(client, name, "wlan_security");
-
-	net->wpapsk_config.EAP_wpa_preshared_passphrase = get_iap_config_string(client, name, "EAP_wpa_preshared_passphrase");
+	GCONF_IAP_READ(get_iap_config_string, type, "type")
+	GCONF_IAP_READ(get_iap_config_bytearray, wlan_ssid, "wlan_ssid")
+	GCONF_IAP_READ(get_iap_config_string, name, "name")
+	GCONF_IAP_READ(get_iap_config_string, wlan_security, "wlan_security")
+	GCONF_IAP_READ(get_iap_config_string, wpapsk_config.EAP_wpa_preshared_passphrase, "EAP_wpa_preshared_passphrase")
 
 	/* TODO: All other values in GConfNetwork */
-
-	fprintf(stderr, "name: %s\n", net->name);
-	fprintf(stderr, "wlan_ssid: %s\n", net->wlan_ssid);
-	fprintf(stderr, "type: %s\n", net->type);
-	fprintf(stderr, "wlan_security: %s\n", net->wlan_security);
-	fprintf(stderr, "wpa-psk passphrase: %s\n", net->wpapsk_config.EAP_wpa_preshared_passphrase);
 
     return net;
 }
@@ -146,11 +152,53 @@ int main_loop(void) {
     if (client == NULL) {
         fprintf(stderr, "Could not create gconf client\n");
     }
-    fprintf(stderr, "Created create gconf client: %p\n", client);
+    fprintf(stderr, "Got gconf client: %p\n", client);
 
-	GConfNetwork* net = get_gconf_network(client, "df07958f-b408-4cc3-b0e1-5aae58aa5d11");
-	if (net)
-		free_gconf_network(net);
+    GError *error = NULL;
+    GSList *iap_list, *iap_iter;
+
+    iap_list = gconf_client_all_dirs(client,
+                     ICD_GCONF_PATH,
+                     &error);
+
+    if (error != NULL) {
+        fprintf(stderr, "Cannot get dirs in gconf:%s \n", error->message);
+        g_error_free(error);
+        return 1;
+    }
+
+    iap_iter = iap_list;
+
+    while (iap_iter) {
+        if (iap_iter->data == NULL) {
+            iap_iter = g_slist_next(iap_iter);
+			/* XXX: This should never happen */
+            //fprintf(stderr, "gconfmap: No data from gconf?");
+
+            continue;
+        }
+
+        fprintf(stderr, "Got: %s\n", (char*)iap_iter->data);
+
+		error = NULL;
+
+		GConfNetwork* net = get_gconf_network(client, (char*)iap_iter->data);
+		if (net) {
+			fprintf(stderr, "name: %s\n", net->name);
+			fprintf(stderr, "wlan_ssid: %s\n", net->wlan_ssid);
+			fprintf(stderr, "type: %s\n", net->type);
+			fprintf(stderr, "wlan_security: %s\n", net->wlan_security);
+			fprintf(stderr, "wpa-psk passphrase: %s\n", net->wpapsk_config.EAP_wpa_preshared_passphrase);
+
+			free_gconf_network(net);
+		}
+
+		g_free(iap_iter->data);
+        iap_iter = g_slist_next(iap_iter);
+    }
+	g_slist_free(iap_list);
+
+	g_object_unref(client);
 
     return 0;
 }
