@@ -229,7 +229,7 @@ static void destroy_bss_info(BssInfo *info) {
 }
 
 // TODO: Pass network config
-char* add_network(void) {
+char* wpaicd_add_network(void) {
     GError* err = NULL;
 
     GVariant* args;
@@ -270,7 +270,7 @@ char* add_network(void) {
     return path;
 }
 
-int remove_all_networks(void) {
+int wpaicd_remove_all_networks(void) {
     GError* err = NULL;
 
     GVariant* ret = g_dbus_connection_call_sync(system_bus,
@@ -296,7 +296,7 @@ int remove_all_networks(void) {
     return 0;
 }
 
-int select_network(const char* network_path) {
+int wpaicd_select_network(const char* network_path) {
     GError* err = NULL;
 
     GVariant* args;
@@ -537,12 +537,12 @@ void wpaicd_test_network_added_cb(BssInfo* info, void* data) {
 void wpaicd_test_scan_done_cb(int ret, void* data) {
     fprintf(stderr, "scan done, ret: %d\n", ret);
 
-    char* path = add_network();
-    select_network(path);
+    char* path = wpaicd_add_network();
+    wpaicd_select_network(path);
     free(path);
 /*
     usleep(10 * 1000 * 1000);
-    remove_all_networks();
+    wpaicd_remove_all_networks();
 */
 
     return;

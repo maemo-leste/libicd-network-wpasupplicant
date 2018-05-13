@@ -145,9 +145,9 @@ void wpaicd_set_network_added_cb(NetworkAdded*, void*);
 void wpaicd_set_scan_done_cb(ScanDone*, void*);
 void wpaicd_set_state_change_cb(StateChange*, void*);
 
-char* add_network(void);
-int remove_all_networks(void);
-int select_network(const char* network_path);
+char* wpaicd_add_network(void);
+int wpaicd_remove_all_networks(void);
+int wpaicd_select_network(const char* network_path);
 
 
 #endif /* _ICDWPA_H_ */
