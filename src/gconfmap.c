@@ -115,8 +115,34 @@ void free_gconf_network(GConfNetwork* net) {
 	free(net->name);
 	free(net->wlan_ssid);
 	free(net->type);
+	free(net->id);
 	free(net);
 }
+
+static char* get_iap_name_from_path(char *path) {
+    char* saveptr = NULL;
+    char *last = NULL;
+    char *cur = NULL;
+    char *dup = strdup(path);
+
+    if (dup == NULL) {
+        return NULL;
+    }
+
+    last = strtok_r(dup, "/", &saveptr);
+    while (1) {
+        cur = strtok_r(NULL, "/", &saveptr);
+        if (cur == NULL) {
+            break;
+        }
+        last = cur;
+    }
+
+    free(dup);
+
+    return strdup(last);
+}
+
 
 #define GCONF_IAP_READ_STRING(func, structvar, var) \
 { \
@@ -129,10 +155,19 @@ void free_gconf_network(GConfNetwork* net) {
 	} \
 }
 
+GConfNetwork* get_gconf_network_rel(GConfClient *client, const char* iapname) {
+    GConfNetwork* r = NULL;
+    gchar* key = g_strdup_printf(ICD_GCONF_PATH "/%s", iapname);
+    r = get_gconf_network(client, key);
+    g_free(key);
+    return r;
+}
+
 GConfNetwork* get_gconf_network(GConfClient *client, const char* name) {
 	GConfNetwork* net = alloc_gconf_network();
 	GError *error = NULL;
 
+	net->id = get_iap_name_from_path((char*)name);
 	GCONF_IAP_READ_STRING(get_iap_config_string, type, "type")
 	GCONF_IAP_READ_STRING(get_iap_config_bytearray, wlan_ssid, "wlan_ssid")
 	GCONF_IAP_READ_STRING(get_iap_config_string, name, "name")
@@ -146,7 +181,6 @@ GConfNetwork* get_gconf_network(GConfClient *client, const char* name) {
 
 GSList* get_gconf_networks(GConfClient *client) {
 	GSList *ret = NULL;
-
 
     GError *error = NULL;
     GSList *iap_list, *iap_iter;
@@ -193,12 +227,24 @@ int main_loop(void) {
     }
     fprintf(stderr, "Got gconf client: %p\n", client);
 
+#if 0
+    GConfNetwork* net = get_gconf_network_iapname(client, "550bcade-e34e-4dcf-8d3f-b492b47f21e8");
+    fprintf(stderr, "name: %s\n", net->name);
+    fprintf(stderr, "wlan_ssid: %s\n", net->wlan_ssid);
+    fprintf(stderr, "type: %s\n", net->type);
+    fprintf(stderr, "wlan_security: %s\n", net->wlan_security);
+    fprintf(stderr, "wpa-psk passphrase: %s\n", net->wpapsk_config.EAP_wpa_preshared_passphrase);
+    free_gconf_network(net);
+#endif
+
+#if 0
 	GSList *iaps = get_gconf_networks(client);
 
 	GSList *iap_iter = iaps;
 	while (iap_iter) {
 		GConfNetwork* net = (GConfNetwork*)iap_iter->data;
 		if (net) {
+			fprintf(stderr, "id: %s\n", net->id);
 			fprintf(stderr, "name: %s\n", net->name);
 			fprintf(stderr, "wlan_ssid: %s\n", net->wlan_ssid);
 			fprintf(stderr, "type: %s\n", net->type);
@@ -211,6 +257,7 @@ int main_loop(void) {
 	}
 
 	g_slist_free(iaps);
+#endif
 
 	g_object_unref(client);
 
