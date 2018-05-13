@@ -229,7 +229,7 @@ static void destroy_bss_info(BssInfo *info) {
 }
 
 // TODO: Pass network config
-char* wpaicd_add_network(void) {
+char* wpaicd_add_network(GConfNetwork *net) {
     GError* err = NULL;
 
     GVariant* args;
@@ -237,8 +237,10 @@ char* wpaicd_add_network(void) {
 
     b = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
 
-    g_variant_builder_add(b, "{sv}", "ssid", g_variant_new_string("<SSID>"));
-    g_variant_builder_add(b, "{sv}", "psk", g_variant_new_string("<PSK>"));
+    g_variant_builder_add(b, "{sv}", "ssid", g_variant_new_string(net->wlan_ssid));
+    g_variant_builder_add(b, "{sv}", "psk", g_variant_new_string(net->wpapsk_config.EAP_wpa_preshared_passphrase));
+
+    // TODO: Map this properly
     g_variant_builder_add(b, "{sv}", "key_mgmt", g_variant_new_string("WPA-PSK"));
 
     /* Do not need to be unref'd, call_sync does that apparently */

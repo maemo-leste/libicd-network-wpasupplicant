@@ -25,6 +25,10 @@
 
 #include "wpasupplicant-defs.h"
 
+/* XXX: We use this for now, but it may be the opposite in the near future
+ * (gconfmap including wpaicd.h) */
+#include "gconfmap.h"
+
 #if 0
 #define _WPA_ICD_DEBUG
 #endif
@@ -145,7 +149,7 @@ void wpaicd_set_network_added_cb(NetworkAdded*, void*);
 void wpaicd_set_scan_done_cb(ScanDone*, void*);
 void wpaicd_set_state_change_cb(StateChange*, void*);
 
-char* wpaicd_add_network(void);
+char* wpaicd_add_network(GConfNetwork *net); /* XXX: This should take some other IR as var, not GConfNetwork */
 int wpaicd_remove_all_networks(void);
 int wpaicd_select_network(const char* network_path);
 
