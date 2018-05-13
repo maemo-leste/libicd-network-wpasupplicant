@@ -47,6 +47,7 @@
 #include "wlan.h"
 #include "icd-common-utils.h"
 #include "wpaicd.h"
+#include "gconfmap.h"
 
 #ifdef DMALLOC_ENABLE
 #include <dmalloc.h>
@@ -69,19 +70,12 @@ static void wlan_bring_up(const gchar *network_type,
 			  icd_nw_link_up_cb_fn link_up_cb,
 			  const gpointer link_up_cb_token,
 			  gpointer *private);
-static gboolean wlan_scan_timeout(void *data);
+static gboolean wlan_scan_timeout(struct wlan_context *ctx);
 
 /* to avoid double free */
 #define g_free_z(a) do { g_free(a); (a)=0; } while(0)
 
 int wlan_debug_level = 1;
-
-
-/* helper struct for remembering adhoc networks */
-struct adhoc_helper {
-	gchar *ssid;
-	guint capability;
-};
 
 /* ------------------------------------------------------------------------- */
 static enum icd_nw_levels map_rssi(int rssi)
@@ -112,31 +106,6 @@ static enum icd_nw_levels map_rssi(int rssi)
 	return val;
 }
 
-
-/* ------------------------------------------------------------------------- */
-static void disconnect_cb(DBusPendingCall *pending, void *user_data)
-{
-	struct wlan_context *ctx = get_wlan_context_from_dbus(user_data);
-
-	ENTER;
-
-	/* The actual disconnect is handled by disconnected signal sent
-	 * by wlancond so we don't do anything here.
-	 */
-
-	EXIT;
-}
-
-/* ------------------------------------------------------------------------- */
-#define EAP_GTC			6
-#define EAP_TLS			13
-#define EAP_TTLS		21
-#define EAP_PEAP		25
-#define EAP_MS			26
-#define EAP_TTLS_PAP		98
-#define EAP_TTLS_MS		99
-#define DEFAULT_PASSWORD	"AeHi5ied"
-
 /* ------------------------------------------------------------------------- */
 /**
  * Called from icd when wlan is to be taken down.
@@ -159,56 +128,14 @@ static void wlan_take_down(const gchar *network_type,
 {
 	struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
-	ENTER;
+    (void)ctx;
+	fprintf(stderr, "WLAN TAKE DOWN\n");
 
-	EXIT;
+    wpaicd_remove_all_networks();
+    link_down_cb(ICD_NW_SUCCESS_NEXT_LAYER, link_down_cb_token);
+
 	return;
 }
-
-/* ------------------------------------------------------------------------- */
-/**
- * Timeout is called if scan has taken too long time.
- * @param data context
- * @retval FALSE This is always returned so that function is not called again.
- */
-static gboolean wlan_scan_stop_timeout(void *data)
-{
-	struct wlan_context *ctx = get_wlan_context_from_dbus(data);
-
-	ENTER;
-
-	if (!ctx->scan_ctx) {
-		/* serious error, we should not be here */
-		ILOG_ERR(WLAN "ERROR: %s",
-			 "In scanning wait timeout but context is not set!");
-		EXIT;
-		if (ctx->link_up_cb) {
-			ctx->link_up_cb(ICD_NW_ERROR, NULL, NULL,
-					ctx->link_up_cb_token, NULL);
-			ctx->link_up_cb = NULL;
-		}
-
-		return FALSE;
-	}
-
-	g_source_remove(ctx->scan_ctx->g_scan_wait_timer);
-	ctx->scan_ctx->g_scan_wait_timer = 0;
-	ctx->scan_ctx->retry_count++;
-
-	EXIT;
-
-	/* Then just call bring up which sets the timer again */
-	ILOG_DEBUG(WLAN "[%s] going up again.", ctx->scan_ctx->network_id);
-	wlan_bring_up(ctx->scan_ctx->network_type,
-		      ctx->scan_ctx->network_attrs,
-		      ctx->scan_ctx->network_id,
-		      ctx->scan_ctx->link_up_cb,
-		      ctx->scan_ctx->link_up_cb_token,
-		      ctx->scan_ctx->private);
-
-	return FALSE;
-}
-
 
 /* ------------------------------------------------------------------------- */
 /** 
@@ -222,6 +149,8 @@ static gboolean wlan_scan_stop_timeout(void *data)
  * @param link_up_cb_token token to pass to the callback function
  * @param private a reference to the icd_nw_api private memeber
  */
+
+/* TODO: Doc mentions interface_name but function doesn't take it as argument */
 static void wlan_bring_up(const gchar *network_type,
 			  const guint network_attrs,
 			  const gchar *network_id,
@@ -231,7 +160,28 @@ static void wlan_bring_up(const gchar *network_type,
 {
 	struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
+    /* I think that network_id here always has to come from gconf.
+     * So we'll have to create a network for wpa_supplicant based on gconf here;
+     * we should not (or, do not, I think?) need to scan for networks that match
+     * the ssid, and based on that, create a map/profile */
+
 	ENTER;
+
+    fprintf(stderr, "wlan_bring_up: %s\n", network_id);
+
+    GConfNetwork *net = get_gconf_network_iapname(ctx->gconf_client, network_id);
+    fprintf(stderr, "Got network: %s, %s\n", net->name, net->wlan_ssid);
+
+    ctx->link_up_cb = link_up_cb;
+    ctx->link_up_cb_token = link_up_cb_token;
+
+    /* TODO: Pass & store network properties here */
+    char *path = NULL;
+    path = wpaicd_add_network(net);
+    wpaicd_select_network(path);
+
+    free(path);
+    free_gconf_network(net);
 
 	EXIT;
 	return;
@@ -243,10 +193,8 @@ static void wlan_bring_up(const gchar *network_type,
  * @retval TRUE Success.
  * @retval FALSE Error.
  */
-static gboolean wlan_scan_timeout(void *data)
+static gboolean wlan_scan_timeout(struct wlan_context *ctx)
 {
-	struct wlan_context *ctx = get_wlan_context_from_dbus(data);
-
 	ENTER;
 
 	ctx->search_cb(ICD_NW_SEARCH_COMPLETE,
@@ -281,23 +229,92 @@ static void wlan_statistics(const gchar *network_type,
 			    icd_nw_link_stats_cb_fn stats_cb,
 			    const gpointer link_stats_cb_token)
 {
+
+	fprintf(stderr, "WLAN STATISTICS\n");
+
+#if 0
+    stats_cb(link_stats_cb_token,
+             WLAN_TYPE_INFRA, // network_type
+             WLAN_SECURITY_WPA_PSK, // network_attrs
+             "Het Kleine Bos", // network id
+             0, // time active
+             ICD_NW_LEVEL_3, // map_rssi(rssi)
+             "AAAAAA", // TODO station id
+             -70, // rssi
+             0, // rx bytes
+             0); // tx bytes
+#endif
+
 	ENTER;
 
 	EXIT;
 	return;
 }
 
+static void wlan_state_change_cb(const char* state, void* data) {
+	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
+
+	fprintf(stderr, "STATE CHANGE: %s\n", state);
+    (void)ctx;
+
+    /*
+    TODO:
+    A state of the interface. Possible values are: return "disconnected", "inactive", "scanning", "authenticating", "associating", "associated", "4way_handshake", "group_handshake", "completed","unknown".
+    */
+
+    /* TODO:
+     * - remove network properties if disconnected/disconnecting*/
+    if (strcmp(state, "associating") == 0) {
+        ctx->state = STATE_CONNECTING;
+    } else if (strcmp(state, "disconnected") == 0) {
+        ctx->state = STATE_IDLE;
+
+        /* TODO */
+#if 0
+        close_cb(ICD_NW_ERROR,
+                 ICD_DBUS_ERROR_NETWORK_ERROR,
+                 network_type,
+                 network_attrs,
+                 network_id);
+#endif
+
+    } else if (strcmp(state, "inactive") == 0) {
+        ctx->state = STATE_IDLE;
+    } else if (strcmp(state, "completed") == 0) {
+        if (ctx->link_up_cb) {
+            ILOG_DEBUG(WLAN "SENDING SUCCESS NEXT LAYER");
+            ctx->link_up_cb(ICD_NW_SUCCESS_NEXT_LAYER,
+                            NULL,
+                            "wlan0", /* FIXME */
+                            ctx->link_up_cb_token,
+                            NULL);
+            ctx->link_up_cb = NULL;
+        }
+        ctx->state = STATE_CONNECTED;
+    }
+
+    /*
+     * close_cb function to inform ICd that the network connection is to be
+     * closed
+     */
+
+    return;
+}
+
 static void wlan_search_network_added_cb (BssInfo* info, void* data) {
 	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
+
+    /* TODO: Check all allocation */
+
+    guint network_attrs = 0;
+    char* network_id = NULL;
+    char* network_name = NULL;
 
     gchar* ssid = calloc((info->ssid_len+1), sizeof(char));
     memcpy(ssid, info->ssid, info->ssid_len);
     ssid[info->ssid_len] = '\0';
 
     enum icd_nw_levels signal = map_rssi(info->signal);
-
-    guint network_attrs = 0;
-
 
     /* TODO: WEP, WPA-EAP, and many, many more... */
     if (info->rsn.keymgmt_wpa_psk ||
@@ -307,25 +324,67 @@ static void wlan_search_network_added_cb (BssInfo* info, void* data) {
         network_attrs |= WLAN_SECURITY_OPEN;
     }
 
+    GSList *iaps = get_gconf_networks(ctx->gconf_client);
+    GSList *iap_iter = iaps;
 
-    /* TODO USE INFO */
-    ctx->search_cb(ICD_NW_SEARCH_CONTINUE,
-                ssid,
-                info->infrastructure ? WLAN_TYPE_INFRA : WLAN_TYPE_ADHOC,
-				network_attrs, /* network attrs */
-                ssid, /* network_id */
-                signal, /* signal */
-                "AAAAAA", /* TODO station_id */
-                info->signal, /* dB */
-                ctx->search_cb_token);
+    while(iap_iter) {
+        GConfNetwork *net = (GConfNetwork*)iap_iter->data;
+        if (net) {
+            fprintf(stderr, "added_cb: Got network: %s\n", net->id);
+            if (strncmp(net->type, "WLAN_INFRA", 10) != 0) { // FIXME
+                fprintf(stderr, "Skipping network: %s\n", net->id);
+                free_gconf_network(net);
+                iap_iter = g_slist_next(iap_iter);
+                continue;
+            }
 
-    /* XXX: free(ssid); */
+            if (strcmp(net->wlan_ssid, ssid) == 0) {
+                fprintf(stderr, "MATCH FOR: %s\n", ssid);
+                network_id = strdup(net->id);
+                network_name = strdup(net->name);
+                /* XXX: Could set autoconnect if we want to */
+                network_attrs |= ICD_NW_ATTR_IAPNAME;
+                free_gconf_network(net);
+                break;
+            }
+
+            free_gconf_network(net);
+        }
+
+        iap_iter = g_slist_next(iap_iter);
+    }
+    g_slist_free(iaps);
+
+    if (network_id == NULL) {
+        network_id = strdup(ssid);
+    }
+    if (network_name == NULL) {
+        network_name = strdup(ssid);
+    }
+
+    if (ctx->search_cb) { /* XXX: HACK: USE STATE ETC */
+        ctx->search_cb(ICD_NW_SEARCH_CONTINUE,
+                    network_name,
+                    info->infrastructure ? WLAN_TYPE_INFRA : WLAN_TYPE_ADHOC,
+                    network_attrs,
+                    network_id,
+                    signal,
+                    "AAAAAA", /* TODO station_id */
+                    info->signal,
+                    ctx->search_cb_token);
+    }
+
+/*
+    free(ssid);
+    free(network_name);
+    free(network_id);
+*/
 }
 
 static void wlan_search_scan_done_cb (int ret, void* data) {
 	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
 
-    wlan_scan_timeout(data);
+    wlan_scan_timeout(ctx);
 
     ctx->search_cb = NULL;
     ctx->search_cb_token = NULL;
@@ -348,38 +407,14 @@ static void wlan_start_search (const gchar *network_type,
 {
 	struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
+	fprintf(stderr, "STARTING SEARCH\n");
+
 	ENTER;
-	ILOG_DEBUG(WLAN "STARTING SEARCH");
 
     wpaicd_initiate_scan();
 
 	ctx->search_cb = search_cb;
 	ctx->search_cb_token = search_cb_token;
-
-#if 0
-    ctx->search_cb(ICD_NW_SEARCH_CONTINUE,
-                "Testing 1 2 3",
-                WLAN_TYPE_INFRA,
-				0, /* network attrs */
-                "Testing 1 2 3", /* network_id */
-                ICD_NW_LEVEL_5, /* signal */
-                "AAAAAA", /* station_id */
-                -40, /* dB */
-                ctx->search_cb_token);
-#endif
-                
-#if 0
-ctx->search_cb(ICD_NW_SEARCH_CONTINUE,
-               id->name,
-               mode,
-               nwattrs | ICD_NW_ATTR_IAPNAME | wlan_get_autoconnect(ctx, cap_bits, id->id),
-               id->id,
-               level,
-               bsshex,
-               rssi,
-               ctx->search_cb_token);
-#endif
-
 
 	EXIT;
 	return;
@@ -397,20 +432,11 @@ static void wlan_stop_search (gpointer *private)
 {
 	struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
-	ENTER;
-	ILOG_DEBUG(WLAN "STOPPING SEARCH");
+	fprintf(stderr, "STOPPING SEARCH\n");
 
-#if 0
-	ctx->search_cb(ICD_NW_SEARCH_COMPLETE,
-		       NULL,
-		       modestr,
-		       ctx->network_attrs,
-		       ctx->ssid,
-		       ICD_NW_LEVEL_NONE,
-		       0,
-		       0,
-		       ctx->search_cb_token);
-#endif
+	ENTER;
+
+    wlan_scan_timeout(ctx);
 
 	EXIT;
 }
@@ -441,6 +467,8 @@ static gboolean wlan_gconf_init(struct wlan_context *ctx)
  */
 static void wlan_destruct(gpointer *private)
 {
+	fprintf(stderr, "DESTRUCT\n");
+
 	ENTER;
 
     wpaicd_free();
@@ -468,7 +496,7 @@ gboolean icd_nw_init (struct icd_nw_api *network_api,
 {
 	struct wlan_context *context;
 
-	ILOG_DEBUG ("%s initializing", PACKAGE_STRING);
+	fprintf(stderr, "%s initializing\n", PACKAGE_STRING);
 
 	network_api->version = ICD_NW_MODULE_VERSION;
 	network_api->link_down = wlan_take_down;
@@ -487,24 +515,31 @@ gboolean icd_nw_init (struct icd_nw_api *network_api,
 	network_api->search_interval = 10;
 	network_api->search_lifetime = 2*network_api->search_interval; // XXX: fixme
 
+#if 0
     /* TODO: watch_cb is never used? */
 	context->watch_cb = watch_cb;
+#endif
 	context->close_cb = close_cb;
 
 	network_api->private = context;
 
     if (wpaicd_init()) {
-        ILOG_ERR(WLAN "%s", "Failed to set up wpaicd");
+        fprintf(stderr, "Failed to set up wpaicd\n");
         g_free_z(context);
         return FALSE;
 	}
-    wpaicd_set_network_added_cb(wlan_search_network_added_cb, (void*)context);
-    wpaicd_set_scan_done_cb(wlan_search_scan_done_cb, (void*)context);
 
     if (!wlan_gconf_init(context)) {
         g_free_z(context);
         return FALSE;
     }
+
+    wpaicd_set_network_added_cb(wlan_search_network_added_cb, (void*)context);
+    wpaicd_set_scan_done_cb(wlan_search_scan_done_cb, (void*)context);
+    wpaicd_set_state_change_cb(wlan_state_change_cb, (void*)context);
+
+    context->state = STATE_IDLE;
+
 
     /* TODO: Check if we can communicate with wpa_supplicant? */
 	return TRUE;
