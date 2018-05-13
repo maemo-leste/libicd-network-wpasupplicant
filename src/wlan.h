@@ -149,15 +149,27 @@ struct scanning_delayed {
  * connection at a time.
  */
 struct wlan_context {
-	struct icd_nw_api *network_api;
-	icd_nw_watch_pid_fn watch_cb;
-	icd_nw_close_fn close_cb;
+    /* TODO: Completely redo this, document what each var is needed/used for! */
 
+	iap_state state;             /* connecting, connected etc */
+
+
+    /* Used to notify icd2 that the link is up */
+	icd_nw_link_up_cb_fn link_up_cb;
+	gpointer link_up_cb_token;
+
+    /* Used to notify icd2 of search results and/or search state */
 	icd_nw_search_cb_fn search_cb;
 	gpointer search_cb_token;
 
-	icd_nw_link_up_cb_fn link_up_cb;
-	gpointer link_up_cb_token;
+    /* To be called when interface needs to go down - e.g. we lost AP connection */
+	icd_nw_close_fn close_cb;
+
+    /* Handle to GConf client */
+	GConfClient *gconf_client;
+
+#if 0
+	struct icd_nw_api *network_api;
 
 	icd_nw_link_down_cb_fn link_down_cb;
 	gpointer link_down_cb_token;
@@ -189,7 +201,6 @@ struct wlan_context {
 	DBusPendingCall *setup_call;
 	DBusError error;
 	DBusConnection *system_bus;
-	GConfClient *gconf_client;
 	int search_interval;
 
 	GHashTable *ssid_to_iap_table;
@@ -201,6 +212,7 @@ struct wlan_context {
 				* ssid. This is needed when calling close_cb()
 				* in disconnect.
 				*/
+#endif
 };
 
 
