@@ -168,6 +168,8 @@ struct wlan_context {
     /* Handle to GConf client */
 	GConfClient *gconf_client;
 
+    gboolean scanning;
+
 #if 0
 	struct icd_nw_api *network_api;
 

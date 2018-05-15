@@ -304,6 +304,9 @@ static void wlan_state_change_cb(const char* state, void* data) {
 static void wlan_search_network_added_cb (BssInfo* info, void* data) {
 	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
 
+    if (!ctx->scanning)
+        return;
+
     /* TODO: Check all allocation */
 
     guint network_attrs = 0;
@@ -384,10 +387,15 @@ static void wlan_search_network_added_cb (BssInfo* info, void* data) {
 static void wlan_search_scan_done_cb (int ret, void* data) {
 	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
 
+    if (!ctx->scanning)
+        return;
+
     wlan_scan_timeout(ctx);
 
     ctx->search_cb = NULL;
     ctx->search_cb_token = NULL;
+
+    ctx->scanning = FALSE;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -411,10 +419,11 @@ static void wlan_start_search (const gchar *network_type,
 
 	ENTER;
 
-    wpaicd_initiate_scan();
-
+    ctx->scanning = TRUE;
 	ctx->search_cb = search_cb;
 	ctx->search_cb_token = search_cb_token;
+
+    wpaicd_initiate_scan();
 
 	EXIT;
 	return;
