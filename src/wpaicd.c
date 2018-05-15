@@ -272,6 +272,70 @@ char* wpaicd_add_network(GConfNetwork *net) {
     return path;
 }
 
+/* TODO: '/' means no connected network */
+char* wpaicd_current_network_path() {
+    GError* err = NULL;
+
+    GVariant* ret = g_dbus_connection_call_sync(system_bus,
+        WPA_DBUS_SERVICE,
+        TEST_INTERFACE_PATH,
+        DBUS_PROPERTIES_INTERFACE_NAME,
+        "Get",
+        g_variant_new("(ss)", WPA_DBUS_INTERFACES_INTERFACE, "CurrentNetwork"),
+        NULL,
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &err);
+
+    if (err != NULL) {
+        fprintf(stderr, "Could not get current network path: %s\n", err->message);
+        g_error_free(err);
+        return NULL;
+    }
+
+    GVariant* tmp = NULL;
+    g_variant_get(ret, "(v)", &tmp);
+    const char* varpath = g_variant_get_string(tmp, NULL);
+    char* path = g_strdup(varpath);
+    g_variant_unref(tmp);
+    g_variant_unref(ret);
+
+    return path;
+}
+
+/* TODO: '/' means not connected to a BSS*/
+char* wpaicd_current_bss_path() {
+    GError* err = NULL;
+
+    GVariant* ret = g_dbus_connection_call_sync(system_bus,
+        WPA_DBUS_SERVICE,
+        TEST_INTERFACE_PATH,
+        DBUS_PROPERTIES_INTERFACE_NAME,
+        "Get",
+        g_variant_new("(ss)", WPA_DBUS_INTERFACES_INTERFACE, "CurrentBSS"),
+        NULL,
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &err);
+
+    if (err != NULL) {
+        fprintf(stderr, "Could not get current network path: %s\n", err->message);
+        g_error_free(err);
+        return NULL;
+    }
+
+    GVariant* tmp = NULL;
+    g_variant_get(ret, "(v)", &tmp);
+    const char* varpath = g_variant_get_string(tmp, NULL);
+    char* path = g_strdup(varpath);
+    g_variant_unref(tmp);
+    g_variant_unref(ret);
+
+    return path;
+}
+
 int wpaicd_remove_all_networks(void) {
     GError* err = NULL;
 
@@ -552,6 +616,14 @@ void wpaicd_test_scan_done_cb(int ret, void* data) {
 
 void wpaicd_test_state_change_cb(const char* state, void* data) {
     fprintf(stderr, "state change: %s\n", state);
+
+    char* net = wpaicd_current_network_path();
+    fprintf(stderr, "Current network path: %s\n", net);
+    free(net);
+
+    char* bss = wpaicd_current_bss_path();
+    fprintf(stderr, "Current BSS path: %s\n", bss);
+    free(bss);
 }
 
 int main_loop(void) {
