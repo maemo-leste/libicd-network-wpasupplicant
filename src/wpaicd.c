@@ -336,6 +336,40 @@ char* wpaicd_current_bss_path() {
     return path;
 }
 
+BssInfo* wpaicd_current_bss_info() {
+    GError* err = NULL;
+
+    BssInfo* info = calloc(1, sizeof(BssInfo));
+
+    if (info == NULL)
+        return NULL;
+
+    char* path = wpaicd_current_bss_path();
+    if (path == NULL) {
+        destroy_bss_info(info);
+        return NULL;
+    }
+
+    if (strcmp(path, "/") == 0) {
+        fprintf(stderr, "No bss path!\n");
+        destroy_bss_info(info);
+        return NULL;
+    }
+
+    err = get_bss_info(path, info);
+
+    if (err != NULL) {
+        fprintf(stderr, "Unable to get current bss info: %s\n", err->message);
+        g_error_free(err);
+        g_free(path);
+        return NULL;
+    }
+
+    g_free(path);
+
+    return info;
+}
+
 int wpaicd_remove_all_networks(void) {
     GError* err = NULL;
 
@@ -624,6 +658,14 @@ void wpaicd_test_state_change_cb(const char* state, void* data) {
     char* bss = wpaicd_current_bss_path();
     fprintf(stderr, "Current BSS path: %s\n", bss);
     free(bss);
+
+    BssInfo *info = wpaicd_current_bss_info();
+    char* tmpssid = malloc(info->ssid_len + 1);
+    strncpy(tmpssid, info->ssid, info->ssid_len);
+    tmpssid[info->ssid_len] = '\0';
+    fprintf(stderr, "Current BSS ssid: %s\n", tmpssid);
+    free(tmpssid);
+    destroy_bss_info(info);
 }
 
 int main_loop(void) {
