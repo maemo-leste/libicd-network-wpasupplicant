@@ -116,43 +116,35 @@ static int debug_print_level = 0;
 
 /** IAP states */
 typedef enum {
+    /* Not connected */
 	STATE_IDLE,
+
+    /* Attempting to connect, set in wlan_bring_up.
+       Information available: iap name, iap attr, iap type */
 	STATE_CONNECTING,
+
+    /* Connected. Information available: iap name, iap attr, iap type */
 	STATE_CONNECTED,
+
+    /* ??? Does this mean we are -trying- to disconnect? */
 	STATE_DISCONNECTING,
+#if 0
 	STATE_SEARCH_SSID, /* Special state which is used when we need to do
 			    * search in connection phase.
 			    */
 	STATE_SEARCH_HIDDEN, /* Used when we are searching hidden IAP */
+#endif
 	STATE_MAX_NR
 } iap_state;
-
-
-/* The parameters of wlan_bring_up() are put here if we have
- * scan in progress and connection is tried during that. If that happens
- * then we wait a while and try again.
- */
-struct scanning_delayed {
-	gchar *network_type;
-	guint network_attrs;
-	gchar *network_id;
-	icd_nw_link_up_cb_fn link_up_cb;
-	gpointer link_up_cb_token;
-	gpointer *private;
-
-#define SCAN_DELAY_MAX_RETRY_COUNT (4*10) /* 10 sec */
-	int retry_count;
-	guint g_scan_wait_timer;
-};
 
 /* Private stuff for this module, this only supports one wlan
  * connection at a time.
  */
+
 struct wlan_context {
     /* TODO: Completely redo this, document what each var is needed/used for! */
 
-	iap_state state;             /* connecting, connected etc */
-
+	iap_state state;
 
     /* Used to notify icd2 that the link is up */
 	icd_nw_link_up_cb_fn link_up_cb;
@@ -173,15 +165,10 @@ struct wlan_context {
 #if 0
 	struct icd_nw_api *network_api;
 
-	icd_nw_link_down_cb_fn link_down_cb;
-	gpointer link_down_cb_token;
-
 	gchar *iap_name;
 	gchar *ssid;
 	gchar *interface;
 
-	gboolean scanning_in_progress;
-	gboolean scan_started;
 	time_t last_scan;
 	int active_scan_count;       /* -1=no need to scan, 0=scan needed,
 				      * >0 current scan count
