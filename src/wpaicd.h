@@ -153,5 +153,8 @@ char* wpaicd_add_network(GConfNetwork *net); /* XXX: This should take some other
 int wpaicd_remove_all_networks(void);
 int wpaicd_select_network(const char* network_path);
 
+char* wpaicd_current_network_path();
+char* wpaicd_current_bss_path();
+BssInfo* wpaicd_current_bss_info();
 
 #endif /* _ICDWPA_H_ */
