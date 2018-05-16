@@ -162,6 +162,10 @@ struct wlan_context {
 
     gboolean scanning;
 
+	char *stored_network_type;
+	guint stored_network_attrs;
+	char *stored_network_id;
+
 #if 0
 	struct icd_nw_api *network_api;
 

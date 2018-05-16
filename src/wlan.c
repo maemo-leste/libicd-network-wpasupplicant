@@ -200,6 +200,10 @@ static void wlan_bring_up(const gchar *network_type,
     path = wpaicd_add_network(net);
     wpaicd_select_network(path);
 
+	ctx->stored_network_type = network_type;
+	ctx->stored_network_attrs = network_attrs;
+	ctx->stored_network_id = network_id;
+
     free(path);
     free_gconf_network(net);
 
@@ -324,14 +328,15 @@ static void wlan_state_change_cb(const char* state, void* data) {
     } else if (strcmp(state, "disconnected") == 0) {
         ctx->state = STATE_IDLE;
 
-        /* TODO */
-#if 0
-        close_cb(ICD_NW_ERROR,
+        ctx->close_cb(ICD_NW_ERROR,
                  ICD_DBUS_ERROR_NETWORK_ERROR,
-                 network_type,
-                 network_attrs,
-                 network_id);
-#endif
+				 ctx->stored_network_type,
+				 ctx->stored_network_attrs,
+				 ctx->stored_network_id);
+
+		ctx->stored_network_type = NULL;
+		ctx->stored_network_id = NULL;
+		ctx->stored_network_attrs = 0;
 
     } else if (strcmp(state, "inactive") == 0) {
         ctx->state = STATE_IDLE;
