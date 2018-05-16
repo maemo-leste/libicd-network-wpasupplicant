@@ -157,4 +157,6 @@ char* wpaicd_current_network_path();
 char* wpaicd_current_bss_path();
 BssInfo* wpaicd_current_bss_info();
 
+void wpaicd_destroy_bss_info(BssInfo*);
+
 #endif /* _ICDWPA_H_ */

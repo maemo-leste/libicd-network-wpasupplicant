@@ -222,7 +222,7 @@ static GError* get_bss_info(const gchar* bss_path, BssInfo *info) {
     return NULL;
 }
 
-static void destroy_bss_info(BssInfo *info) {
+void wpaicd_destroy_bss_info(BssInfo *info) {
     free(info->ssid);
     free(info->mac_addr);
     free(info);
@@ -346,13 +346,13 @@ BssInfo* wpaicd_current_bss_info() {
 
     char* path = wpaicd_current_bss_path();
     if (path == NULL) {
-        destroy_bss_info(info);
+        wpaicd_destroy_bss_info(info);
         return NULL;
     }
 
     if (strcmp(path, "/") == 0) {
         fprintf(stderr, "No bss path!\n");
-        destroy_bss_info(info);
+        wpaicd_destroy_bss_info(info);
         return NULL;
     }
 
@@ -516,7 +516,7 @@ static void on_scan_done(GDBusProxy *proxy,
             g_error_free(error);
 
             g_variant_unref(val);
-            destroy_bss_info(info);
+            wpaicd_destroy_bss_info(info);
             continue;
         }
 
@@ -526,7 +526,7 @@ static void on_scan_done(GDBusProxy *proxy,
             network_added_cb(info, network_added_data);
         }
 
-        destroy_bss_info(info);
+        wpaicd_destroy_bss_info(info);
     }
 
     g_variant_iter_free(iter);
@@ -665,7 +665,7 @@ void wpaicd_test_state_change_cb(const char* state, void* data) {
     tmpssid[info->ssid_len] = '\0';
     fprintf(stderr, "Current BSS ssid: %s\n", tmpssid);
     free(tmpssid);
-    destroy_bss_info(info);
+    wpaicd_destroy_bss_info(info);
 }
 
 int main_loop(void) {
