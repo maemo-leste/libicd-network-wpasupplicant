@@ -1,16 +1,49 @@
 wpa-supplicant conversion task list:
 
-[ ] Rename package to libicd-network-wpasupplicant (from libicd-network-wlan)
-[/] Implement scanning
-[/] Implement network info getting
-[ ] Implement other icd2 interfaces
+[/] Rename package to libicd-network-wpasupplicant (from libicd-network-wlan) [in separate branch, needs fixes]
+[X] Implement scanning
+[X] Implement network info getting
+[X] Implement network adding / connecting
+[/] Implement other icd2 interfaces
+[ ] Rework g variant parsing using more complex g_variant_get calls
+[X] Implement wlan_statistics
+[/] Add states
+[ ] Look at auth failures and timeouts
 [ ] Figure out how wpa_supplicant should be started
 [ ] Look at wpa_priv(8)
-[ ] Run valgrind over code
-[ ] Test mode complicated network setups (eduroam, ad-hoc...)
+[/] Run valgrind over code
+[ ] Test more complicated network setups (eduroam, ad-hoc...)
+[ ] Active or passive scan?
+[ ] Properly (re)add copyright where code was used/copied from previous module
 
-[ ] Re-add gconf support
-[ ] Make plugin work with gconf values
-[ ] Support loading values from gconf
-[ ] Be able to make wpasupplicant network configs from gconf
-[ ] Add network attrs and local attrs (local attrs can be passed to icd2, which are all wpa_supplicant attrs possible, but then stored in the local-attr part... I guess)
+[X] Re-add gconf support
+[X] Make plugin work with gconf values
+[X] Support loading values from gconf
+[X] Be able to make wpasupplicant network configs from gconf
+[/] Add network attrs and local attrs (local attrs can be passed to icd2, which are all wpa_supplicant attrs possible, but then stored in the local-attr part... I guess)
+
+[ ] Refactor code: rename functions, macros, etc, make it a lot more clean
+
+[X] `network_name` should be connection name, if known in gconf
+
+[/] Implement network down notifications (lost connection, etc) - requires to keep network_id and such in struct
+[ ] Run `linux -indent` on all code to fix mixed spaces/tabs, retroactively through the commits.
+[X] Do not crash on auto scan
+
+
+
+Mappings:
+
+- gconf network desc (NOTE: gconf doesn't contain just network properties, but
+  also some policies, but place them elsewhere)
+- wpa_supplicant bss desc (dbus in)
+- wpa_supplicant add_network desc (dbus out)
+
+Mappings alwaus way, apart from name:
+  - gconf -> dbus out (wpa_supplicant add_network)
+  - dbus in -> dbus out
+
+Matching:
+
+- 'gconf known' networks to 'dbus in' networks (I would say: gconf -> IR, dbus
+  in -> IR, match IR networks...?)
