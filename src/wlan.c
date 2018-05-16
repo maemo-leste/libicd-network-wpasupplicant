@@ -229,23 +229,44 @@ static void wlan_statistics(const gchar *network_type,
 			    icd_nw_link_stats_cb_fn stats_cb,
 			    const gpointer link_stats_cb_token)
 {
+	struct wlan_context *ctx = get_wlan_context_from_icd(private);
+
+	ENTER;
 
 	fprintf(stderr, "WLAN STATISTICS\n");
 
-#if 0
-    stats_cb(link_stats_cb_token,
-             WLAN_TYPE_INFRA, // network_type
-             WLAN_SECURITY_WPA_PSK, // network_attrs
-             "Het Kleine Bos", // network id
-             0, // time active
-             ICD_NW_LEVEL_3, // map_rssi(rssi)
-             "AAAAAA", // TODO station id
-             -70, // rssi
-             0, // rx bytes
-             0); // tx bytes
-#endif
+    // XXX: Also support stats for other states (?)
+    if (ctx->state == STATE_IDLE) {
+        return;
+    }
 
-	ENTER;
+	/* TODO: Check if network_id matches our current ssid */
+	BssInfo *info = wpaicd_current_bss_info();
+
+	if (info == NULL) {
+		fprintf(stderr, "ctx->state != STATE_IDLE, but we have no bss?\n");
+		return;
+	}
+
+    /* Dependent on the state, return info
+     * Can we use 'CurrentNetwork' on the dbus interface here to get network
+     * properties? Do we need them, aren't they already in gconf?
+     */
+
+    enum icd_nw_levels signal = map_rssi(info->signal);
+
+	stats_cb(link_stats_cb_token,
+			 network_type,
+		     network_attrs,
+			 network_id,
+			 0, /* time_active */
+			 signal, /* signal */
+			 "AAAAAA", /* TODO: station id */
+			 info->signal, /* dB */
+			 0, /* rx bytes */
+			 0  /* tx bytes */);
+
+	wpaicd_destroy_bss_info(info);
 
 	EXIT;
 	return;
