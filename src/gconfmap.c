@@ -30,8 +30,7 @@
 #include "gconfmap.h"
 
 
-/* TODO: COPYRIGHT: from libicd-network-wlan wlan.c */
-/* TODO: pick better name */
+/* Copyright: libicd-network-wlan from Nokia */
 static gchar *get_iap_config_bytearray(GConfClient *gconf_client,
                        const char *iap_name,
                        const char *key_name,
@@ -42,7 +41,6 @@ static gchar *get_iap_config_bytearray(GConfClient *gconf_client,
     GSList *list, *entry;
     gint i;
 
-    //key = g_strdup_printf(ICD_GCONF_PATH "/%s/%s", iap_name, key_name);
     key = g_strdup_printf("%s/%s", iap_name, key_name);
     value = gconf_client_get(gconf_client, key, error);
 	if ((value == NULL) || (*error != NULL)) {
@@ -66,7 +64,6 @@ static gchar *get_iap_config_bytearray(GConfClient *gconf_client,
         /* fallthrough for error */
     default:
 		;
-		/* TODO return/print error */
     }
     gconf_value_free(value);
     g_free(key);
@@ -74,23 +71,18 @@ static gchar *get_iap_config_bytearray(GConfClient *gconf_client,
     return ret;
 }
 
-/* TODO: COPYRIGHT: from libicd-network-wlan wlan.c */
-/* TODO: pick better name */
+/* Copyright: libicd-network-wlan from Nokia */
 static gchar *get_iap_config_string(GConfClient *gconf_client,
                     const char *iap_name,
                     const char *key_name,
 					GError **error)
 {
-	/* TODO: Take pointer to GError ? */
     gchar *key, *value;
 
     key = g_strdup_printf("%s/%s", iap_name, key_name);
-    //key = g_strdup_printf(ICD_GCONF_PATH "/%s/%s", iap_name, key_name);
     value = gconf_client_get_string(gconf_client, key, error);
     g_free(key);
 
-	/* TODO: What to do with error? Do not like hiding errors! */
-    //check_gconf_error(&error);
 	if (*error != NULL) {
 		return NULL;
 	}
@@ -144,10 +136,9 @@ static char* get_iap_name_from_path(char *path) {
 }
 
 
-#define GCONF_IAP_READ_STRING(func, structvar, var) \
+#define GCONF_IAP_READ(func, structvar, var) \
 { \
 	net->structvar = func(client, name, var, &error); \
-	/* TODO: Print error as well? */ \
 	if (error != NULL) { \
 		g_error_free(error); \
 		free_gconf_network(net); \
@@ -168,11 +159,11 @@ GConfNetwork* get_gconf_network(GConfClient *client, const char* name) {
 	GError *error = NULL;
 
 	net->id = get_iap_name_from_path((char*)name);
-	GCONF_IAP_READ_STRING(get_iap_config_string, type, "type")
-	GCONF_IAP_READ_STRING(get_iap_config_bytearray, wlan_ssid, "wlan_ssid")
-	GCONF_IAP_READ_STRING(get_iap_config_string, name, "name")
-	GCONF_IAP_READ_STRING(get_iap_config_string, wlan_security, "wlan_security")
-	GCONF_IAP_READ_STRING(get_iap_config_string, wpapsk_config.EAP_wpa_preshared_passphrase, "EAP_wpa_preshared_passphrase")
+	GCONF_IAP_READ(get_iap_config_string, type, "type")
+	GCONF_IAP_READ(get_iap_config_bytearray, wlan_ssid, "wlan_ssid")
+	GCONF_IAP_READ(get_iap_config_string, name, "name")
+	GCONF_IAP_READ(get_iap_config_string, wlan_security, "wlan_security")
+	GCONF_IAP_READ(get_iap_config_string, wpapsk_config.EAP_wpa_preshared_passphrase, "EAP_wpa_preshared_passphrase")
 
 	/* TODO: All other values in GConfNetwork */
 
@@ -198,10 +189,9 @@ GSList* get_gconf_networks(GConfClient *client) {
     iap_iter = iap_list;
 
     while (iap_iter) {
+        /* This should never happen */
         if (iap_iter->data == NULL) {
             iap_iter = g_slist_next(iap_iter);
-			/* XXX: This should never happen */
-            //fprintf(stderr, "gconfmap: No data from gconf?");
 
             continue;
         }
