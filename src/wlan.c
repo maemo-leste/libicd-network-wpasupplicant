@@ -193,6 +193,8 @@ static void wlan_bring_up(const gchar *network_type,
     ctx->link_up_cb = link_up_cb;
     ctx->link_up_cb_token = link_up_cb_token;
 
+    ctx->state = STATE_CONNECTING;
+
     /* TODO: Pass & store network properties here */
     char *path = NULL;
     path = wpaicd_add_network(net);
@@ -293,16 +295,30 @@ static void wlan_statistics(const gchar *network_type,
 static void wlan_state_change_cb(const char* state, void* data) {
 	struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
 
-	fprintf(stderr, "STATE CHANGE: %s\n", state);
-    (void)ctx;
+	fprintf(stderr, "wlan_state_change_cb: current state: %s\n", state);
 
     /*
-    TODO:
-    A state of the interface. Possible values are: return "disconnected", "inactive", "scanning", "authenticating", "associating", "associated", "4way_handshake", "group_handshake", "completed","unknown".
+    wpa_supplicant state of the interface. Possible values are:
+        * "disconnected"
+        * "inactive"
+        * "scanning"
+        * "authenticating"
+        * "associating"
+        * "associated"
+        * "4way_handshake"
+        * "group_handshake"
+        * "completed"
+        * "unknown".
     */
+
 
     /* TODO:
      * - remove network properties if disconnected/disconnecting*/
+
+    /* XXX: wpa supplicant can on its own decide to reassociate without telling
+     * us, I guess ? */
+
+    /* XXX: Also look at current state */
     if (strcmp(state, "associating") == 0) {
         ctx->state = STATE_CONNECTING;
     } else if (strcmp(state, "disconnected") == 0) {
@@ -329,6 +345,7 @@ static void wlan_state_change_cb(const char* state, void* data) {
                             NULL);
             ctx->link_up_cb = NULL;
         }
+
         ctx->state = STATE_CONNECTED;
     }
 
@@ -455,6 +472,11 @@ static void wlan_start_search (const gchar *network_type,
 	struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
 	fprintf(stderr, "STARTING SEARCH\n");
+
+    if (ctx->scanning) {
+        /* TODO XXX: Deny/error if we are already scanning */
+        return;
+    }
 
 	ENTER;
 
