@@ -390,8 +390,8 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
 				fprintf(stderr, "MATCH FOR: %s\n", ssid);
 				network_id = strdup(net->id);
 				network_name = strdup(net->name);
-				/* XXX: Could set autoconnect if we want to */
 				network_attrs |= ICD_NW_ATTR_IAPNAME;
+                network_attrs |= ICD_NW_ATTR_AUTOCONNECT;
 				free_gconf_network(net);
 				break;
 			}
