@@ -87,11 +87,6 @@ static void wlan_bring_up(const gchar * network_type,
 			  const gpointer link_up_cb_token, gpointer * private);
 static gboolean wlan_scan_timeout(struct wlan_context *ctx);
 
-/* to avoid double free */
-#define g_free_z(a) do { g_free(a); (a)=0; } while(0)
-
-int wlan_debug_level = 1;
-
 /* ------------------------------------------------------------------------- */
 static enum icd_nw_levels map_rssi(int rssi)
 {
@@ -430,11 +425,6 @@ static void wlan_search_scan_done_cb(int ret, void *data)
 		return;
 
 	wlan_scan_timeout(ctx);
-
-	ctx->search_cb = NULL;
-	ctx->search_cb_token = NULL;
-
-	ctx->scanning = FALSE;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -467,7 +457,16 @@ static void wlan_start_search(const gchar * network_type,
 	ctx->search_cb = search_cb;
 	ctx->search_cb_token = search_cb_token;
 
-	wpaicd_initiate_scan();
+	int ret = wpaicd_initiate_scan();
+    if (ret) {
+        fprintf(stderr, "Starting scan failed.\n");
+        wlan_scan_timeout(ctx);
+
+        ctx->search_cb = NULL;
+        ctx->search_cb_token = NULL;
+
+        ctx->scanning = FALSE;
+    }
 
 	EXIT;
 	return;
@@ -574,12 +573,12 @@ gboolean icd_nw_init(struct icd_nw_api *network_api,
 
 	if (wpaicd_init()) {
 		fprintf(stderr, "Failed to set up wpaicd\n");
-		g_free_z(context);
+		g_free(context);
 		return FALSE;
 	}
 
 	if (!wlan_gconf_init(context)) {
-		g_free_z(context);
+		g_free(context);
 		return FALSE;
 	}
 
