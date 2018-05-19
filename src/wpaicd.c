@@ -252,29 +252,14 @@ void wpaicd_destroy_bss_info(BssInfo * info)
     free(info);
 }
 
-// TODO: Pass network config
 char *wpaicd_add_network(GConfNetwork * net)
 {
     GError *err = NULL;
 
-    GVariant *args;
-    GVariantBuilder *b;
-
-    b = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
-
-    g_variant_builder_add(b, "{sv}", "ssid",
-                          g_variant_new_string(net->wlan_ssid));
-    g_variant_builder_add(b, "{sv}", "psk",
-                          g_variant_new_string(net->wpapsk_config.
-                                               EAP_wpa_preshared_passphrase));
-
-    // TODO: Map this properly
-    g_variant_builder_add(b, "{sv}", "key_mgmt",
-                          g_variant_new_string("WPA-PSK"));
-
-    /* Do not need to be unref'd, call_sync does that apparently */
-    args = g_variant_new("(a{sv})", b);
-    g_variant_builder_unref(b);
+    GVariant *args = gconfnet_to_wpadbus(net);
+    if (args == NULL) {
+        return NULL;
+    }
 
     GVariant *ret = g_dbus_connection_call_sync(system_bus,
                                                 WPA_DBUS_SERVICE,
