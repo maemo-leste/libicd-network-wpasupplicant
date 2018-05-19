@@ -192,18 +192,27 @@ static void wlan_bring_up(const gchar * network_type,
     ctx->link_up_cb = link_up_cb;
     ctx->link_up_cb_token = link_up_cb_token;
 
-    wlan_set_state(ctx, STATE_CONNECTING);
-
-    /* TODO: Pass & store network properties here */
     char *path = NULL;
     path = wpaicd_add_network(net);
-    wpaicd_select_network(path);
+    if (path == NULL) {
+        fprintf(stderr, "wpaicd_add_network failed\n");
+        goto fail1;
+    }
+
+    if (wpaicd_select_network(path)) {
+        fprintf(stderr, "wpaicd_select_network failed\n");
+        goto fail2;
+    }
+
+    wlan_set_state(ctx, STATE_CONNECTING);
 
     ctx->stored_network_type = network_type;
     ctx->stored_network_attrs = network_attrs;
     ctx->stored_network_id = network_id;
 
+fail2:
     free(path);
+fail1:
     free_gconf_network(net);
 
     EXIT;
