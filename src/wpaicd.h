@@ -150,9 +150,11 @@ char *wpaicd_add_network(GConfNetwork * net);   /* XXX: This should take some ot
 int wpaicd_remove_all_networks(void);
 int wpaicd_select_network(const char *network_path);
 
-char *wpaicd_current_network_path();
-char *wpaicd_current_bss_path();
-BssInfo *wpaicd_current_bss_info();
+char *wpaicd_current_network_path(void);
+char *wpaicd_current_bss_path(void);
+BssInfo *wpaicd_current_bss_info(void);
+
+guint wpaicd_bssinfo_to_network_attrs(BssInfo * info);
 
 void wpaicd_destroy_bss_info(BssInfo *);
 
