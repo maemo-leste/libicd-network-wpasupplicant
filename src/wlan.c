@@ -366,12 +366,7 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
 
     enum icd_nw_levels signal = map_rssi(info->signal);
 
-    /* TODO: WEP, WPA-EAP, and many, many more... */
-    if (info->rsn.keymgmt_wpa_psk || info->rsn.keymgmt_wpa_psk_sha256) {
-        network_attrs |= WLAN_SECURITY_WPA_PSK;
-    } else {
-        network_attrs |= WLAN_SECURITY_OPEN;
-    }
+    network_attrs = wpaicd_bssinfo_to_network_attrs(info);
 
     GSList *iaps = get_gconf_networks(ctx->gconf_client);
     GSList *iap_iter = iaps;

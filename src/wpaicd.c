@@ -23,6 +23,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <osso-ic.h>
+#include <icd/icd_wlan_defs.h>
+#include <connui/libicd-network-wlan-dev.h>
+
 #include "wpaicd.h"
 
 #define TEST_INTERFACE_PATH WPA_DBUS_INTERFACES_OPATH "/1"
@@ -606,6 +610,22 @@ int wpaicd_initiate_scan(void)
     g_variant_unref(ret);
 
     return 0;
+}
+
+guint wpaicd_bssinfo_to_network_attrs(BssInfo * info)
+{
+    if (0) {
+        /* TODO: Implement EAP */
+    } else if (info->rsn.keymgmt_wpa_psk || info->rsn.keymgmt_wpa_psk_sha256) {
+        return WLAN_SECURITY_WPA_PSK;
+    } else if (info->privacy) {
+        /* WEP has no WPA nor RSN key management, but does have privacy flag */
+        return WLAN_SECURITY_WEP;
+    } else {
+        return WLAN_SECURITY_OPEN;
+    }
+
+    return 0;                   /* XXX: Should never be reached */
 }
 
 int wpaicd_init(void)
