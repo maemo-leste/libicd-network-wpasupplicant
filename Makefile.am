@@ -29,9 +29,6 @@ EXTRA_DIST = \
 gconfschemasdir = $(sysconfdir)/gconf/schemas
 dist_gconfschemas_DATA = libicd-network-wlan.schemas
 
-libicdnetworkwlandevincludedir = $(includedir)
-libicdnetworkwlandevinclude_HEADERS = src/libicd-network-wlan-dev.h
-
 # backup should really provide its directory in its .pc file
 backuprestoredir = $(sysconfdir)/osso-backup/restore.d/always
 dist_backuprestore_SCRIPTS = \
