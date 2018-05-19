@@ -269,7 +269,10 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
     }
 
     if (!strcmp(net->wlan_security, "NONE")) {
-        goto fail;
+        g_variant_builder_add(b, "{sv}", "key_mgmt",
+                              g_variant_new_string("NONE"));
+        g_variant_builder_add(b, "{sv}", "auth_alg",
+                              g_variant_new_string("OPEN"));
     } else if (!strcmp(net->wlan_security, "WEP")) {
         switch (net->wep_config.wlan_wepdefkey) {
             case 1:
