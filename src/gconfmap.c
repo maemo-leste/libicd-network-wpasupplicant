@@ -271,8 +271,55 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
     if (!strcmp(net->wlan_security, "NONE")) {
         goto fail;
     } else if (!strcmp(net->wlan_security, "WEP")) {
-        /* Go over net->wep_config */
-        goto fail;
+        switch (net->wep_config.wlan_wepdefkey) {
+            case 1:
+                g_variant_builder_add(b, "{sv}", "wep_key0",
+                                      g_variant_new_string(net->wep_config.wlan_wepkey1));
+
+                break;
+            case 2:
+                g_variant_builder_add(b, "{sv}", "wep_key1",
+                                      g_variant_new_string(net->wep_config.wlan_wepkey2));
+
+                break;
+            case 3:
+                g_variant_builder_add(b, "{sv}", "wep_key2",
+                                      g_variant_new_string(net->wep_config.wlan_wepkey3));
+
+                break;
+            case 4:
+                g_variant_builder_add(b, "{sv}", "wep_key3",
+                                      g_variant_new_string(net->wep_config.wlan_wepkey4));
+
+                break;
+            default:
+                fprintf(stderr, "wlan_wepdefkey not in (1,2,3,4): %d\n", net->wep_config.wlan_wepdefkey);
+                goto fail;
+
+        }
+        g_variant_builder_add(b, "{sv}", "wep_tx_keyidx",
+                              g_variant_new_int32(net->wep_config.wlan_wepdefkey - 1));
+
+        g_variant_builder_add(b, "{sv}", "key_mgmt",
+                              g_variant_new_string("NONE"));
+
+        /* FIXME: WEP104 == 104 bits password, aka 26 hex digits, WEP40 == 40
+         * bits password, aka 10 hex digits. We just set both for now, not sure
+         * if we need to differentiate. (We could, based on the
+         * 'net->wep_config.wlanwepkey?' lengths.)
+         * Let's just add both for now
+         */
+        g_variant_builder_add(b, "{sv}", "group",
+                              g_variant_new_string("WEP104 WEP40"));
+
+
+        /* XXX: I think this is not always correct, there might be two different
+         * WEP types... But how do we differentiate them?
+         * openwrt shows: "WEP Open System" and "WEP Shared Key" (WEP104)
+         * I believe WEP Open System might actually just be an open wifi with
+         * some encryption, and only WEP Shared Key requires auth...
+         * http://wirelessnetworkssecurity.blogspot.nl/2013/01/wep-open-key-vs-wep-shared-key.html
+        */
     } else if (!strcmp(net->wlan_security, "WPA_PSK")) {
         /* Go over net->wpapsk_config */
         g_variant_builder_add(b, "{sv}", "psk",
@@ -290,9 +337,11 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
     /* Do not need to be unref'd, call_sync does that apparently */
     args = g_variant_new("(a{sv})", b);
 
+    /* XXX: This should be debug only */
     char *pr = g_variant_print(args, TRUE);
     fprintf(stderr, "gconfnet_to_wpadbus: %s\n", pr);
     free(pr);
+
 
  fail:
     g_variant_builder_unref(b);
