@@ -118,6 +118,8 @@ typedef struct {
     /* One-of: "NONE", "WEP", "WPA_PSK", "WPA_EAP" */
     char *wlan_security;
 
+    gboolean temporary;
+
     GConfNetworkWPAEAP wpaeap_config;
     GConfNetworkWPAPSK wpapsk_config;
     GConfNetworkWEP wep_config;

@@ -397,6 +397,10 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
             if (strncmp(net->type, "WLAN_INFRA", 10) != 0) {    // FIXME
                 goto next;
             }
+            if (net->temporary) {
+                fprintf(stderr, "Temporary; skipping\n");
+                goto next;
+            }
 
             /* TODO: Extend matching to include other attributes */
             if (strcmp(net->wlan_ssid, ssid) == 0) {

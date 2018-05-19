@@ -87,8 +87,7 @@ static gchar *get_iap_config_string(GConfClient * gconf_client,
     return value;
 }
 
-/* Copyright: libicd-network-wlan from Nokia */
-static gint get_iap_config_int(GConfClient * gconf_client,
+static gint get_iap_config_int(GConfClient* gconf_client,
                                const char *iap_name,
                                const char *key_name, GError ** error)
 {
@@ -106,6 +105,38 @@ static gint get_iap_config_int(GConfClient * gconf_client,
     }
 
     return value;
+}
+
+static gboolean get_iap_config_bool(GConfClient* gconf_client,
+                               const char *iap_name,
+                               const char *key_name, GError** error)
+{
+    gchar *key;
+    GConfValue *value;
+    gboolean boolval = FALSE;
+
+    key = g_strdup_printf("%s/%s", iap_name, key_name);
+    value = gconf_client_get(gconf_client, key, error);
+    g_free(key);
+
+
+    if (*error != NULL) {
+        /* Callee must check error anyway, so that we return FALSE her
+         * doesn't matter. */
+        return FALSE;
+    }
+
+    if (value != NULL) {
+        if (value->type == GCONF_VALUE_BOOL) {
+            boolval = gconf_value_get_bool(value);
+        } else {
+            /* TODO XXX: Give error a GError value here? */
+        }
+        gconf_value_free(value);
+    }
+
+
+    return boolval;
 }
 
 GConfNetwork *alloc_gconf_network(void)
@@ -197,6 +228,7 @@ GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
     GCONF_IAP_READ(get_iap_config_bytearray, wlan_ssid, "wlan_ssid")
     GCONF_IAP_READ(get_iap_config_string, name, "name")
     GCONF_IAP_READ(get_iap_config_string, wlan_security, "wlan_security")
+    GCONF_IAP_READ(get_iap_config_bool, temporary, "temporary")
 
     /* wep_config */
     GCONF_IAP_READ(get_iap_config_int, wep_config.wlan_wepdefkey, "wlan_wepdefkey")
