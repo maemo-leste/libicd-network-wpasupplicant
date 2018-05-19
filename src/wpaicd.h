@@ -95,16 +95,13 @@ typedef struct {
 
     /* True if infrastructure, False if ad-hoc */
     gboolean infrastructure;
+    gboolean privacy;
 
-    /* icd2 network_name */
     gchar *ssid;
     gsize ssid_len;
 
-    /* TODO: network_attrs */
-
     gint16 signal;
 
-    /* icd2 station_id */
     gchar *mac_addr;
     gsize mac_addr_len;
 

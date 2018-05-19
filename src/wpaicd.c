@@ -206,13 +206,16 @@ static GError *get_bss_info(const gchar * bss_path, BssInfo * info)
 
     _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Signal", &info->signal,
                                G_VARIANT_TYPE_INT16, "n")
-        _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Frequency",
-                                   &info->frequency, G_VARIANT_TYPE_UINT16, "q")
-/* ad-hoc, infrastructure */
-        _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Mode", &mode,
-                                   G_VARIANT_TYPE_STRING, "s")
-        info->infrastructure = strcmp(mode, "infrastructure") == 0;
+    _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Frequency",
+                               &info->frequency, G_VARIANT_TYPE_UINT16, "q")
+    /* ad-hoc, infrastructure */
+    _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Mode", &mode,
+                               G_VARIANT_TYPE_STRING, "s")
+    info->infrastructure = strcmp(mode, "infrastructure") == 0;
     free(mode);
+
+    _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Privacy", &info->privacy,
+                               G_VARIANT_TYPE_BOOLEAN, "b")
 
     _BSS_BYTESTRING_FROM_DICT(&bss_info_dict, "SSID", info->ssid,
                               info->ssid_len);
