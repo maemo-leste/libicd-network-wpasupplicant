@@ -29,7 +29,6 @@
 
 #include "gconfmap.h"
 
-/* Copyright: libicd-network-wlan from Nokia */
 static gchar *get_iap_config_bytearray(GConfClient * gconf_client,
                                        const char *iap_name,
                                        const char *key_name, GError ** error)
@@ -69,7 +68,6 @@ static gchar *get_iap_config_bytearray(GConfClient * gconf_client,
     return ret;
 }
 
-/* Copyright: libicd-network-wlan from Nokia */
 static gchar *get_iap_config_string(GConfClient * gconf_client,
                                     const char *iap_name,
                                     const char *key_name, GError ** error)
