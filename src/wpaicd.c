@@ -638,7 +638,8 @@ guint wpaicd_bssinfo_to_network_attrs(BssInfo * info)
         return WLAN_SECURITY_OPEN;
     }
 
-    return 0;                   /* XXX: Should never be reached */
+    /* XXX: Should never be reached */
+    return 0;
 }
 
 int wpaicd_init(void)
@@ -711,9 +712,17 @@ void wpaicd_test_scan_done_cb(int ret, void *data)
 {
     fprintf(stderr, "scan done, ret: %d\n", ret);
 
-    char *path = wpaicd_add_network(NULL);
+    GConfClient *client;
+    client = gconf_client_get_default();
+    GConfNetwork *net = get_gconf_network_iapname(client, "8ed28b2b-d17e-4b00-ad91-d42393bada62");
+
+    char *path = wpaicd_add_network(net);
     wpaicd_select_network(path);
     free(path);
+
+    free_gconf_network(net);
+    g_object_unref(client);
+
 /*
     usleep(10 * 1000 * 1000);
     wpaicd_remove_all_networks();
