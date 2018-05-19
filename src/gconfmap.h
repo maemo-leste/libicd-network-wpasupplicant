@@ -130,6 +130,8 @@ GConfNetwork *get_gconf_network_iapname(GConfClient * client,
                                         const char *iapname);
 GSList *get_gconf_networks(GConfClient * client);
 
+GVariant *gconfnet_to_wpadbus(GConfNetwork * net);
+
 GConfNetwork *alloc_gconf_network(void);
 void free_gconf_network(GConfNetwork * net);
 

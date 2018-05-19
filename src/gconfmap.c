@@ -209,7 +209,53 @@ GSList *get_gconf_networks(GConfClient * client)
     return ret;
 }
 
-static GConfClient *client = NULL;
+GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
+{
+    GVariant *args = NULL;
+    GVariantBuilder *b;
+
+    b = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
+
+    g_variant_builder_add(b, "{sv}", "ssid",
+                          g_variant_new_string(net->wlan_ssid));
+
+    /* TODO: support ad-hoc */
+    if (strcmp(net->type, "WLAN_INFRA")) {
+        /* XXX: set auth_alg=NONE ? */
+        goto fail;
+    }
+
+    if (!strcmp(net->wlan_security, "NONE")) {
+        goto fail;
+    } else if (!strcmp(net->wlan_security, "WEP")) {
+        /* Go over net->wep_config */
+        goto fail;
+    } else if (!strcmp(net->wlan_security, "WPA_PSK")) {
+        /* Go over net->wpapsk_config */
+        g_variant_builder_add(b, "{sv}", "psk",
+                              g_variant_new_string(net->
+                                                   wpapsk_config.EAP_wpa_preshared_passphrase));
+
+        g_variant_builder_add(b, "{sv}", "key_mgmt",
+                              g_variant_new_string("WPA-PSK"));
+
+    } else if (!strcmp(net->wlan_security, "WPA_EAP")) {
+        /* Go over net->wpaeap_config */
+        goto fail;
+    }
+
+    /* Do not need to be unref'd, call_sync does that apparently */
+    args = g_variant_new("(a{sv})", b);
+
+    char *pr = g_variant_print(args, TRUE);
+    fprintf(stderr, "gconfnet_to_wpadbus: %s\n", pr);
+    free(pr);
+
+ fail:
+    g_variant_builder_unref(b);
+    return args;
+
+}
 
 #if 0
 static GConfClient *client = NULL;
