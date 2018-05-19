@@ -614,13 +614,26 @@ int wpaicd_initiate_scan(void)
 
 guint wpaicd_bssinfo_to_network_attrs(BssInfo * info)
 {
-    if (0) {
-        /* TODO: Implement EAP */
-    } else if (info->rsn.keymgmt_wpa_psk || info->rsn.keymgmt_wpa_psk_sha256) {
+    /* TODO: WPA instead of just WPA2 */
+    gboolean is_wpa_psk = info->rsn.keymgmt_wpa_psk ||
+                          info->rsn.keymgmt_wpa_ft_psk ||
+                          info->rsn.keymgmt_wpa_psk_sha256;
+
+    gboolean is_wpa_eap = info->rsn.keymgmt_wpa_eap ||
+                          info->rsn.keymgmt_wpa_ft_eap ||
+                          info->rsn.keymgmt_wpa_eap_sha256;
+
+    if (is_wpa_eap) {
+        /* XXX: We need WLAN_SECURITY_WPA_EAP */
         return WLAN_SECURITY_WPA_PSK;
+
+    } else if (is_wpa_psk) {
+        return WLAN_SECURITY_WPA_PSK;
+
     } else if (info->privacy) {
         /* WEP has no WPA nor RSN key management, but does have privacy flag */
         return WLAN_SECURITY_WEP;
+
     } else {
         return WLAN_SECURITY_OPEN;
     }
