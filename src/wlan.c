@@ -236,6 +236,8 @@ static gboolean wlan_scan_timeout(struct wlan_context *ctx)
                    NULL,
                    0, NULL, ICD_NW_LEVEL_NONE, NULL, 0, ctx->search_cb_token);
 
+    ctx->scanning = FALSE;
+
     EXIT;
     return FALSE;
 }
