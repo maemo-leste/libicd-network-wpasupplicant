@@ -179,15 +179,14 @@ static void wlan_bring_up(const gchar * network_type,
 
     fprintf(stderr, "wlan_bring_up: %s\n", network_id);
 
-    GConfNetwork *net =
-        get_gconf_network_iapname(ctx->gconf_client, network_id);
-    fprintf(stderr, "Got network: %s, %s\n", net->name, net->wlan_ssid);
+    GConfNetwork *net = get_gconf_network_iapname(ctx->gconf_client, network_id);
     if (net == NULL) {
         fprintf(stderr, "Cannot connect to network: net == NULL\n");
         link_up_cb(ICD_NW_ERROR, NULL, NULL, link_up_cb_token, NULL);
 
         return;
     }
+    fprintf(stderr, "Got network: %s, %s\n", net->name, net->wlan_ssid);
 
     ctx->link_up_cb = link_up_cb;
     ctx->link_up_cb_token = link_up_cb_token;
@@ -231,12 +230,17 @@ static gboolean wlan_scan_timeout(struct wlan_context *ctx)
 {
     ENTER;
 
+    fprintf(stderr, "wlan_scan_timeout\n");
+
     ctx->search_cb(ICD_NW_SEARCH_COMPLETE,
                    NULL,
                    NULL,
                    0, NULL, ICD_NW_LEVEL_NONE, NULL, 0, ctx->search_cb_token);
 
     ctx->scanning = FALSE;
+
+    ctx->search_cb = NULL;
+    ctx->search_cb_token = NULL;
 
     EXIT;
     return FALSE;
@@ -420,22 +424,22 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
         network_name = strdup(ssid);
     }
 
-    if (ctx->search_cb) {       /* XXX: HACK: USE STATE ETC */
-        ctx->search_cb(ICD_NW_SEARCH_CONTINUE, network_name, info->infrastructure ? WLAN_TYPE_INFRA : WLAN_TYPE_ADHOC, network_attrs, network_id, signal, "AAAAAA",     /* TODO station_id */
-                       info->signal, ctx->search_cb_token);
-    }
+    ctx->search_cb(ICD_NW_SEARCH_CONTINUE, network_name, 
+                   info->infrastructure ? WLAN_TYPE_INFRA : WLAN_TYPE_ADHOC,
+                   network_attrs, network_id, signal,
+                   "AAAAAA", /* TODO station_id */
+                   info->signal, ctx->search_cb_token);
 
-/*
     free(ssid);
     free(network_name);
     free(network_id);
-*/
 }
 
 static void wlan_search_scan_done_cb(int ret, void *data)
 {
     struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
 
+    fprintf(stderr, "SCAN DONE\n");
     if (!ctx->scanning)
         return;
 
@@ -499,8 +503,6 @@ static void wlan_start_search(const gchar * network_type,
 static void wlan_stop_search(gpointer * private)
 {
     struct wlan_context *ctx = get_wlan_context_from_icd(private);
-
-    fprintf(stderr, "STOPPING SEARCH\n");
 
     ENTER;
 
