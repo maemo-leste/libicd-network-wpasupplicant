@@ -196,11 +196,13 @@ static void wlan_bring_up(const gchar * network_type,
     path = wpaicd_add_network(net);
     if (path == NULL) {
         fprintf(stderr, "wpaicd_add_network failed\n");
+        link_up_cb(ICD_NW_ERROR, NULL, NULL, link_up_cb_token, NULL);
         goto fail1;
     }
 
     if (wpaicd_select_network(path)) {
         fprintf(stderr, "wpaicd_select_network failed\n");
+        link_up_cb(ICD_NW_ERROR, NULL, NULL, link_up_cb_token, NULL);
         goto fail2;
     }
 
