@@ -485,11 +485,6 @@ static void wlan_start_search(const gchar * network_type,
     fprintf(stderr, "Starting scan failed.\n");
     wlan_scan_timeout(ctx);
 
-    ctx->search_cb = NULL;
-    ctx->search_cb_token = NULL;
-
-    ctx->scanning = FALSE;
-
  done:
     EXIT;
     return;
