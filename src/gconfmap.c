@@ -87,6 +87,27 @@ static gchar *get_iap_config_string(GConfClient * gconf_client,
     return value;
 }
 
+/* Copyright: libicd-network-wlan from Nokia */
+static gint get_iap_config_int(GConfClient * gconf_client,
+                               const char *iap_name,
+                               const char *key_name, GError ** error)
+{
+    gchar *key;
+    int value;
+
+    key = g_strdup_printf("%s/%s", iap_name, key_name);
+    value = gconf_client_get_int(gconf_client, key, error);
+    g_free(key);
+
+    if (*error != NULL) {
+        /* Callee must check error anyway, so that we return 0 here doesn't
+         * matter. */
+        return 0;
+    }
+
+    return value;
+}
+
 GConfNetwork *alloc_gconf_network(void)
 {
     GConfNetwork *net = malloc(sizeof(GConfNetwork));
@@ -99,7 +120,18 @@ GConfNetwork *alloc_gconf_network(void)
 void free_gconf_network(GConfNetwork * net)
 {
     /* TODO: Also free other values in the sub structs */
+
+    /* wpapsk_config */
     free(net->wpapsk_config.EAP_wpa_preshared_passphrase);
+
+
+    /* wep_config */
+    free(net->wep_config.wlan_wepkey1);
+    free(net->wep_config.wlan_wepkey2);
+    free(net->wep_config.wlan_wepkey3);
+    free(net->wep_config.wlan_wepkey4);
+
+    /* generic */
     free(net->wlan_security);
     free(net->name);
     free(net->wlan_ssid);
@@ -162,12 +194,23 @@ GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
 
     net->id = get_iap_name_from_path((char *)name);
     GCONF_IAP_READ(get_iap_config_string, type, "type")
-        GCONF_IAP_READ(get_iap_config_bytearray, wlan_ssid, "wlan_ssid")
-        GCONF_IAP_READ(get_iap_config_string, name, "name")
-        GCONF_IAP_READ(get_iap_config_string, wlan_security, "wlan_security")
-        GCONF_IAP_READ(get_iap_config_string,
-                       wpapsk_config.EAP_wpa_preshared_passphrase,
-                       "EAP_wpa_preshared_passphrase")
+    GCONF_IAP_READ(get_iap_config_bytearray, wlan_ssid, "wlan_ssid")
+    GCONF_IAP_READ(get_iap_config_string, name, "name")
+    GCONF_IAP_READ(get_iap_config_string, wlan_security, "wlan_security")
+
+    /* wep_config */
+    GCONF_IAP_READ(get_iap_config_int, wep_config.wlan_wepdefkey, "wlan_wepdefkey")
+
+    GCONF_IAP_READ(get_iap_config_string, wep_config.wlan_wepkey1, "wlan_wepkey1")
+    GCONF_IAP_READ(get_iap_config_string, wep_config.wlan_wepkey2, "wlan_wepkey2")
+    GCONF_IAP_READ(get_iap_config_string, wep_config.wlan_wepkey3, "wlan_wepkey3")
+    GCONF_IAP_READ(get_iap_config_string, wep_config.wlan_wepkey4, "wlan_wepkey4")
+
+
+    /* wpapsk_config */
+    GCONF_IAP_READ(get_iap_config_string,
+                   wpapsk_config.EAP_wpa_preshared_passphrase,
+                   "EAP_wpa_preshared_passphrase")
 
         /* TODO: All other values in GConfNetwork */
         return net;
