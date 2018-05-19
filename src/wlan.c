@@ -86,6 +86,7 @@ static void wlan_bring_up(const gchar * network_type,
 			  icd_nw_link_up_cb_fn link_up_cb,
 			  const gpointer link_up_cb_token, gpointer * private);
 static gboolean wlan_scan_timeout(struct wlan_context *ctx);
+static void wlan_set_state(struct wlan_context *ctx, iap_state state);
 
 /* ------------------------------------------------------------------------- */
 static enum icd_nw_levels map_rssi(int rssi)
@@ -181,11 +182,17 @@ static void wlan_bring_up(const gchar * network_type,
 	GConfNetwork *net =
 	    get_gconf_network_iapname(ctx->gconf_client, network_id);
 	fprintf(stderr, "Got network: %s, %s\n", net->name, net->wlan_ssid);
+    if (net == NULL) {
+        fprintf(stderr, "Cannot connect to network: net == NULL\n");
+        link_up_cb(ICD_NW_ERROR, NULL, NULL, link_up_cb_token, NULL);
+
+        return;
+    }
 
 	ctx->link_up_cb = link_up_cb;
 	ctx->link_up_cb_token = link_up_cb_token;
 
-	ctx->state = STATE_CONNECTING;
+    wlan_set_state(ctx, STATE_CONNECTING);
 
 	/* TODO: Pass & store network properties here */
 	char *path = NULL;
@@ -308,9 +315,9 @@ static void wlan_state_change_cb(const char *state, void *data)
 
 	/* XXX: Also look at current state */
 	if (strcmp(state, "associating") == 0) {
-		ctx->state = STATE_CONNECTING;
+        wlan_set_state(ctx, STATE_CONNECTING);
 	} else if (strcmp(state, "disconnected") == 0) {
-		ctx->state = STATE_IDLE;
+        wlan_set_state(ctx, STATE_IDLE);
 
 		ctx->close_cb(ICD_NW_ERROR,
 			      ICD_DBUS_ERROR_NETWORK_ERROR,
@@ -323,7 +330,7 @@ static void wlan_state_change_cb(const char *state, void *data)
 		ctx->stored_network_attrs = 0;
 
 	} else if (strcmp(state, "inactive") == 0) {
-		ctx->state = STATE_IDLE;
+        wlan_set_state(ctx, STATE_IDLE);
 	} else if (strcmp(state, "completed") == 0) {
 		if (ctx->link_up_cb) {
 			ILOG_DEBUG(WLAN "SENDING SUCCESS NEXT LAYER");
@@ -332,7 +339,7 @@ static void wlan_state_change_cb(const char *state, void *data)
 			ctx->link_up_cb = NULL;
 		}
 
-		ctx->state = STATE_CONNECTED;
+        wlan_set_state(ctx, STATE_CONNECTED);
 	}
 
 	/*
@@ -381,9 +388,12 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
 				continue;
 			}
 
+            /* TODO: Extend matching to include other attributes */
 			if (strcmp(net->wlan_ssid, ssid) == 0) {
 				fprintf(stderr, "MATCH FOR: %s\n", ssid);
 				network_id = strdup(net->id);
+
+                /* XXX: network_name can be NULL if added via the dialog?? */
 				network_name = strdup(net->name);
 				network_attrs |= ICD_NW_ATTR_IAPNAME;
                 network_attrs |= ICD_NW_ATTR_AUTOCONNECT;
@@ -447,8 +457,7 @@ static void wlan_start_search(const gchar * network_type,
 	fprintf(stderr, "STARTING SEARCH\n");
 
 	if (ctx->scanning) {
-		/* TODO XXX: Deny/error if we are already scanning */
-		return;
+        goto scan_failed;
 	}
 
 	ENTER;
@@ -458,16 +467,19 @@ static void wlan_start_search(const gchar * network_type,
 	ctx->search_cb_token = search_cb_token;
 
 	int ret = wpaicd_initiate_scan();
-    if (ret) {
-        fprintf(stderr, "Starting scan failed.\n");
-        wlan_scan_timeout(ctx);
+    if (ret == 0)
+        goto done;
 
-        ctx->search_cb = NULL;
-        ctx->search_cb_token = NULL;
+    scan_failed:
+    fprintf(stderr, "Starting scan failed.\n");
+    wlan_scan_timeout(ctx);
 
-        ctx->scanning = FALSE;
-    }
+    ctx->search_cb = NULL;
+    ctx->search_cb_token = NULL;
 
+    ctx->scanning = FALSE;
+
+done:
 	EXIT;
 	return;
 }
@@ -525,6 +537,11 @@ static void wlan_destruct(gpointer * private)
 	/* TODO: Free context->gconf_client */
 
 	EXIT;
+}
+
+static void wlan_set_state(struct wlan_context *ctx, iap_state state) {
+    fprintf(stderr, "wlan_set_state: %d -> %d\n", ctx->state, state);
+    ctx->state = state;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -587,7 +604,7 @@ gboolean icd_nw_init(struct icd_nw_api *network_api,
 	wpaicd_set_scan_done_cb(wlan_search_scan_done_cb, (void *)context);
 	wpaicd_set_state_change_cb(wlan_state_change_cb, (void *)context);
 
-	context->state = STATE_IDLE;
+    wlan_set_state(context, STATE_IDLE);
 
 	/* TODO: Check if we can communicate with wpa_supplicant? */
 	return TRUE;
