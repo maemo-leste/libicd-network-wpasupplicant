@@ -59,7 +59,7 @@
 
 #include <maemosec_certman.h>
 
-#include "libicd-network-wlan-dev.h"
+#include <connui/libicd-network-wlan-dev.h>
 #include "wlan.h"
 #include "icd-common-utils.h"
 #include "wpaicd.h"
