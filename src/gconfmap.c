@@ -212,6 +212,8 @@ GSList *get_gconf_networks(GConfClient * client)
 static GConfClient *client = NULL;
 
 #if 0
+static GConfClient *client = NULL;
+
 int main_loop(void)
 {
     client = gconf_client_get_default();
