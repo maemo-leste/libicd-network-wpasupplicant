@@ -46,7 +46,7 @@ typedef struct wpa {
     gboolean keymgmt_wpa_psk;
     gboolean keymgmt_wpa_eap;
     gboolean keymgmt_wpa_none;
-    
+
     /* Array */
     gboolean pairwise_ccmp;
     gboolean pairwise_tkip;
@@ -97,7 +97,7 @@ typedef struct {
     gboolean infrastructure;
 
     /* icd2 network_name */
-    gchar* ssid;
+    gchar *ssid;
     gsize ssid_len;
 
     /* TODO: network_attrs */
@@ -105,16 +105,16 @@ typedef struct {
     gint16 signal;
 
     /* icd2 station_id */
-    gchar* mac_addr;
+    gchar *mac_addr;
     gsize mac_addr_len;
 
     WpaInfo wpa;
     RsnInfo rsn;
 } BssInfo;
 
-typedef void NetworkAdded(BssInfo*, void*);
-typedef void ScanDone(int, void*);
-typedef void StateChange(const char *, void*);
+typedef void NetworkAdded(BssInfo *, void *);
+typedef void ScanDone(int, void *);
+typedef void StateChange(const char *, void *);
 
 #define _BSS_SIMPLE_INFO_FROM_DICT(gvar, keyname, structname, keytype, keytype2) \
 { \
@@ -145,18 +145,18 @@ int wpaicd_init(void);
 void wpaicd_free(void);
 int wpaicd_initiate_scan(void);
 
-void wpaicd_set_network_added_cb(NetworkAdded*, void*);
-void wpaicd_set_scan_done_cb(ScanDone*, void*);
-void wpaicd_set_state_change_cb(StateChange*, void*);
+void wpaicd_set_network_added_cb(NetworkAdded *, void *);
+void wpaicd_set_scan_done_cb(ScanDone *, void *);
+void wpaicd_set_state_change_cb(StateChange *, void *);
 
-char* wpaicd_add_network(GConfNetwork *net); /* XXX: This should take some other IR as var, not GConfNetwork */
+char *wpaicd_add_network(GConfNetwork * net);   /* XXX: This should take some other IR as var, not GConfNetwork */
 int wpaicd_remove_all_networks(void);
-int wpaicd_select_network(const char* network_path);
+int wpaicd_select_network(const char *network_path);
 
-char* wpaicd_current_network_path();
-char* wpaicd_current_bss_path();
-BssInfo* wpaicd_current_bss_info();
+char *wpaicd_current_network_path();
+char *wpaicd_current_bss_path();
+BssInfo *wpaicd_current_bss_info();
 
-void wpaicd_destroy_bss_info(BssInfo*);
+void wpaicd_destroy_bss_info(BssInfo *);
 
-#endif /* _ICDWPA_H_ */
+#endif                          /* _ICDWPA_H_ */

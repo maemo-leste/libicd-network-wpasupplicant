@@ -25,7 +25,6 @@
  * Some code/headers should probably be shared with connui-wlan and other
  * packages.*/
 
-
 #ifndef _GCONFMAP_H_
 #define _GCONFMAP_H_
 
@@ -59,7 +58,6 @@ typedef struct {
 
 } GConfNetworkPolicies;
 
-
 typedef struct {
     /* get_iap_config_bool(ctx->gconf_client, iap_name, "EAP_MSCHAPV2_password_prompt", FALSE); */
     gboolean EAP_MSCHAPV2_password_prompt;
@@ -77,18 +75,18 @@ typedef struct {
     gint PEAP_tunneled_eap_type;
 
     /* get_iap_config_string(ctx->gconf_client, iap_name, "EAP_GTC_passcode"); */
-    char* EAP_GTC_passcode;
+    char *EAP_GTC_passcode;
 
     /* get_iap_config_string(ctx->gconf_client, iap_name, "EAP_TLS_PEAP_client_certificate_file"); */
-    char* EAP_TLS_PEAP_client_certificate_file;
+    char *EAP_TLS_PEAP_client_certificate_file;
 } GConfNetworkWPAEAP;
 
 typedef struct {
     /* key = get_iap_config_string(ctx->gconf_client, ctx->iap_name, keyname); */
-    char* wlan_wepkey1;
-    char* wlan_wepkey2;
-    char* wlan_wepkey3;
-    char* wlan_wepkey4;
+    char *wlan_wepkey1;
+    char *wlan_wepkey2;
+    char *wlan_wepkey3;
+    char *wlan_wepkey4;
 
     /* default_key = get_iap_config_int(ctx->gconf_client, ctx->iap_name, * "wlan_wepdefkey"); */
     gint wlan_wepdefkey;
@@ -100,25 +98,25 @@ typedef struct {
 } GConfNetworkAdhoc;
 
 typedef struct {
-	/* Passphrase to use with WPA_PSK security mode */
-    char* EAP_wpa_preshared_passphrase;
+    /* Passphrase to use with WPA_PSK security mode */
+    char *EAP_wpa_preshared_passphrase;
 } GConfNetworkWPAPSK;
 
 typedef struct {
     /* IAP name */
-    char* id;
+    char *id;
 
-	/* Connection name */
-    char* name;
+    /* Connection name */
+    char *name;
 
-	/* TODO: This should be a set of bytes, not string, since APs can contain, afaik, null chars */
-    char* wlan_ssid;
+    /* TODO: This should be a set of bytes, not string, since APs can contain, afaik, null chars */
+    char *wlan_ssid;
 
     /* One-of: "WLAN_INFRA", "WLAN_ADHOC" */
-    char* type;
+    char *type;
 
     /* One-of: "NONE", "WEP", "WPA_PSK", "WPA_EAP" */
-    char* wlan_security;
+    char *wlan_security;
 
     GConfNetworkWPAEAP wpaeap_config;
     GConfNetworkWPAPSK wpapsk_config;
@@ -127,13 +125,12 @@ typedef struct {
     GConfNetworkPolicies policy_config;
 } GConfNetwork;
 
+GConfNetwork *get_gconf_network(GConfClient * client, const char *name);
+GConfNetwork *get_gconf_network_iapname(GConfClient * client,
+                                        const char *iapname);
+GSList *get_gconf_networks(GConfClient * client);
 
-GConfNetwork* get_gconf_network(GConfClient *client, const char* name);
-GConfNetwork* get_gconf_network_iapname(GConfClient *client, const char* iapname);
-GSList* get_gconf_networks(GConfClient *client);
+GConfNetwork *alloc_gconf_network(void);
+void free_gconf_network(GConfNetwork * net);
 
-GConfNetwork* alloc_gconf_network(void);
-void free_gconf_network(GConfNetwork* net);
-
-
-#endif /* _GCONFMAP_H_ */
+#endif                          /* _GCONFMAP_H_ */
