@@ -538,12 +538,14 @@ static gboolean wlan_gconf_init(struct wlan_context *ctx)
  */
 static void wlan_destruct(gpointer * private)
 {
+    struct wlan_context *ctx = get_wlan_context_from_icd(private);
+
     fprintf(stderr, "DESTRUCT\n");
 
     ENTER;
 
     wpaicd_free();
-    /* TODO: Free context->gconf_client */
+    g_object_unref(ctx->gconf_client);
 
     EXIT;
 }
