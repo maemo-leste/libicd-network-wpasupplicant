@@ -615,19 +615,21 @@ int wpaicd_initiate_scan(void)
 guint wpaicd_bssinfo_to_network_attrs(BssInfo * info)
 {
     /* TODO: WPA instead of just WPA2 */
-    gboolean is_wpa_psk = info->rsn.keymgmt_wpa_psk ||
-                          info->rsn.keymgmt_wpa_ft_psk ||
-                          info->rsn.keymgmt_wpa_psk_sha256;
+    gboolean is_wpa2_psk = info->rsn.keymgmt_wpa_psk ||
+                           info->rsn.keymgmt_wpa_ft_psk ||
+                           info->rsn.keymgmt_wpa_psk_sha256;
+    gboolean is_wpa_psk =  info->wpa.keymgmt_wpa_psk;
 
-    gboolean is_wpa_eap = info->rsn.keymgmt_wpa_eap ||
-                          info->rsn.keymgmt_wpa_ft_eap ||
-                          info->rsn.keymgmt_wpa_eap_sha256;
+    gboolean is_wpa2_eap = info->rsn.keymgmt_wpa_eap ||
+                           info->rsn.keymgmt_wpa_ft_eap ||
+                           info->rsn.keymgmt_wpa_eap_sha256;
+    gboolean is_wpa_eap = info->wpa.keymgmt_wpa_eap;
 
-    if (is_wpa_eap) {
+    if (is_wpa_eap || is_wpa2_eap) {
         /* XXX: We need WLAN_SECURITY_WPA_EAP */
         return WLAN_SECURITY_WPA_PSK;
 
-    } else if (is_wpa_psk) {
+    } else if (is_wpa_psk || is_wpa2_psk) {
         return WLAN_SECURITY_WPA_PSK;
 
     } else if (info->privacy) {
