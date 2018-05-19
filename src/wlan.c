@@ -387,14 +387,15 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
 
     GSList *iaps = get_gconf_networks(ctx->gconf_client);
     GSList *iap_iter = iaps;
+    gboolean done = FALSE;
 
     while (iap_iter) {
         GConfNetwork *net = (GConfNetwork *) iap_iter->data;
         if (net) {
+            if (done)
+                goto next;
             if (strncmp(net->type, "WLAN_INFRA", 10) != 0) {    // FIXME
-                free_gconf_network(net);
-                iap_iter = g_slist_next(iap_iter);
-                continue;
+                goto next;
             }
 
             /* TODO: Extend matching to include other attributes */
@@ -405,11 +406,12 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
                 /* XXX: network_name can be NULL if added via the dialog?? */
                 network_name = strdup(net->name);
                 network_attrs |= ICD_NW_ATTR_IAPNAME;
+                /* XXX: We might not always be able to set autoconnect */
                 network_attrs |= ICD_NW_ATTR_AUTOCONNECT;
-                free_gconf_network(net);
-                break;
+                done = TRUE;
             }
 
+        next:
             free_gconf_network(net);
         }
 
