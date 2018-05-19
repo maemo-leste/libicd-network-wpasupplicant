@@ -328,8 +328,10 @@ char* wpaicd_current_bss_path() {
 
     GVariant* tmp = NULL;
     g_variant_get(ret, "(v)", &tmp);
+
     const char* varpath = g_variant_get_string(tmp, NULL);
     char* path = g_strdup(varpath);
+
     g_variant_unref(tmp);
     g_variant_unref(ret);
 
@@ -637,7 +639,7 @@ void wpaicd_test_network_added_cb(BssInfo* info, void* data) {
 void wpaicd_test_scan_done_cb(int ret, void* data) {
     fprintf(stderr, "scan done, ret: %d\n", ret);
 
-    char* path = wpaicd_add_network();
+    char* path = wpaicd_add_network(NULL);
     wpaicd_select_network(path);
     free(path);
 /*
