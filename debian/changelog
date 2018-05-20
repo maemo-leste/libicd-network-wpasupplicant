@@ -1,4 +1,4 @@
-libicd-network-wpasupplicant (0.1) unstable; urgency=low
+libicd-network-wpasupplicant (0.1.0) unstable; urgency=low
 
   * Initial package
 
