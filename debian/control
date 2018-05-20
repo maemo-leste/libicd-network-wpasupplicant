@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 4.0.0), icd2-dev (>= 0.87+fremantle7),
  icd2-osso-ic-dev (>=0.37), libosso-dev (>= 1.11-1),
  libglib2.0-dev (>= 2.8.6-1osso5),  autotools-dev, libmaemosec-certman-dev,
  libdbus-glib-1-dev (>= 0.61-osso11), libgconf2-dev (>= 2.6.4.14-osso2),
- libconnui-dev
+ libconnui-dev, libexpat1-dev
 Standards-Version: 3.6.2
 
 Package: libicd-network-wpasupplicant
