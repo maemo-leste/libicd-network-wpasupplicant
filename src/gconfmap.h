@@ -44,10 +44,7 @@ TODO:
    - wlan_hidden
    - powersave_after_scan
    - wlan_powersave
-   - EAP_GTC_identity (icw EAP_GTC_passcode)
    - EAP_SIMPLE_CONFIG_device_password
-   - EAP_manual_username
-   - EAP_use_manual_username
    - TLS_server_authenticates_client_policy_in_client
 */
 
@@ -73,35 +70,31 @@ typedef struct {
     char* EAP_MSCHAPV2_username;
     char* EAP_MSCHAPV2_password;
 
-    /* get_iap_config_bool(ctx->gconf_client, iap, "EAP_wpa2_only_mode", FALSE); */
     gboolean EAP_wpa2_only_mode;
 
-    /* get_iap_config_int(ctx->gconf_client, iap_name, "EAP_default_type"); */
     gint EAP_default_type;
 
-    /* get_iap_config_int(ctx->gconf_client, iap_name, "PEAP_tunneled_eap_type"); */
     gint PEAP_tunneled_eap_type;
 
-    /* get_iap_config_string(ctx->gconf_client, iap_name, "EAP_GTC_passcode"); */
+    char *EAP_GTC_identity;
     char *EAP_GTC_passcode;
 
-    /* get_iap_config_string(ctx->gconf_client, iap_name, "EAP_TLS_PEAP_client_certificate_file"); */
     char *EAP_TLS_PEAP_client_certificate_file;
+
+    char *EAP_manual_username;
+    gboolean EAP_use_manual_username;
 } GConfNetworkWPAEAP;
 
 typedef struct {
-    /* key = get_iap_config_string(ctx->gconf_client, ctx->iap_name, keyname); */
     char *wlan_wepkey1;
     char *wlan_wepkey2;
     char *wlan_wepkey3;
     char *wlan_wepkey4;
 
-    /* default_key = get_iap_config_int(ctx->gconf_client, ctx->iap_name, * "wlan_wepdefkey"); */
     gint wlan_wepdefkey;
 } GConfNetworkWEP;
 
 typedef struct {
-    /* channel = get_iap_config_int(ctx->gconf_client, ctx->iap_name, * "wlan_adhoc_channel"); */
     gint wlan_adhoc_channel;
 } GConfNetworkAdhoc;
 
