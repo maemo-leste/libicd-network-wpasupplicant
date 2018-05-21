@@ -416,6 +416,17 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
 
     /* TTLS options */
     } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_TTLS_PAP)  {
+        g_variant_builder_add(b, "{sv}", "eap",
+                              g_variant_new_string("TTLS"));
+        g_variant_builder_add(b, "{sv}", "phase2=\"auth=PAP\"",
+                              g_variant_new_string("TTLS"));
+        g_variant_builder_add(b, "{sv}", "identity",
+                              g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_username));
+        g_variant_builder_add(b, "{sv}", "password",
+                              g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_password));
+        if (net->wpaeap_config.EAP_use_manual_username)
+            g_variant_builder_add(b, "{sv}", "anonymous_identity",
+                                  g_variant_new_string(net->wpaeap_config.EAP_manual_username));
         return FALSE;
 
     } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_TTLS_MS)  {
