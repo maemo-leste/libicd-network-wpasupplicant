@@ -226,6 +226,11 @@ GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
     GCONF_IAP_READ(get_iap_config_bool, wpaeap_config.EAP_wpa2_only_mode, "EAP_wpa2_only_mode")
     GCONF_IAP_READ(get_iap_config_int, wpaeap_config.EAP_default_type, "EAP_default_type")
     GCONF_IAP_READ(get_iap_config_int, wpaeap_config.PEAP_tunneled_eap_type, "PEAP_tunneled_eap_type")
+    GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_GTC_identity, "EAP_GTC_identity")
+    GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_GTC_passcode, "EAP_GTC_passcode")
+    GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_TLS_PEAP_client_certificate_file, "EAP_TLS_PEAP_client_certificate_file")
+    GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_manual_username, "EAP_manual_username")
+    GCONF_IAP_READ(get_iap_config_int, wpaeap_config.EAP_use_manual_username, "EAP_use_manual_username")
 
     /* TODO: All other values in GConfNetwork */
     return net;
@@ -237,6 +242,10 @@ void free_gconf_network(GConfNetwork * net)
     /* wpaeap_config */
     free(net->wpaeap_config.EAP_MSCHAPV2_username);
     free(net->wpaeap_config.EAP_MSCHAPV2_password);
+    free(net->wpaeap_config.EAP_GTC_identity);
+    free(net->wpaeap_config.EAP_GTC_passcode);
+    free(net->wpaeap_config.EAP_TLS_PEAP_client_certificate_file);
+    free(net->wpaeap_config.EAP_manual_username);
 
     /* wpapsk_config */
     free(net->wpapsk_config.EAP_wpa_preshared_passphrase);
@@ -392,6 +401,7 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
     g_variant_builder_add(b, "{sv}", "key_mgmt",
                           g_variant_new_string("WPA-EAP"));
 
+    /* PEAP options */
     if (eap_type == EAP_PEAP && eap_inner_type == EAP_MS) {
         /* TODO: Check char* values for EAP_MSCHAPV2_username etc to not be empty? */
         g_variant_builder_add(b, "{sv}", "eap",
@@ -400,12 +410,32 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
                               g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_username));
         g_variant_builder_add(b, "{sv}", "password",
                               g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_password));
+        /* TODO: (Client) certificate file? */
+    } else if (eap_type == EAP_PEAP && eap_inner_type == EAP_GTC) {
+        return FALSE;
 
-        /* TODO: Client certificate file */
+    /* TTLS options */
+    } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_TTLS_PAP)  {
+        return FALSE;
+
+    } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_TTLS_MS)  {
+        return FALSE;
+
+    } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_MS)  {
+        return FALSE;
+
+    } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_GTC)  {
+        return FALSE;
+
+    /* TODO: EAP_TLS */
+    } else if (eap_type == EAP_TLS)  {
+        /* EAP_TLS_PEAP_client_certificate_file */
+        return FALSE;
     } else {
         /* TODO: Only PEAP + MSCHAPv2 tested currently */
         return FALSE;
     }
+
 
     return TRUE;
 }
