@@ -614,7 +614,6 @@ int wpaicd_initiate_scan(void)
 
 guint wpaicd_bssinfo_to_network_attrs(BssInfo * info)
 {
-    /* TODO: WPA instead of just WPA2 */
     gboolean is_wpa2_psk = info->rsn.keymgmt_wpa_psk ||
                            info->rsn.keymgmt_wpa_ft_psk ||
                            info->rsn.keymgmt_wpa_psk_sha256;
@@ -624,24 +623,39 @@ guint wpaicd_bssinfo_to_network_attrs(BssInfo * info)
                            info->rsn.keymgmt_wpa_ft_eap ||
                            info->rsn.keymgmt_wpa_eap_sha256;
     gboolean is_wpa_eap = info->wpa.keymgmt_wpa_eap;
+    guint cap = 0;
+    guint attr = 0;
 
-    if (is_wpa_eap || is_wpa2_eap) {
-        /* XXX: We need WLAN_SECURITY_WPA_EAP */
-        return WLAN_SECURITY_WPA_PSK;
-
-    } else if (is_wpa_psk || is_wpa2_psk) {
-        return WLAN_SECURITY_WPA_PSK;
-
-    } else if (info->privacy) {
-        /* WEP has no WPA nor RSN key management, but does have privacy flag */
-        return WLAN_SECURITY_WEP;
-
+    if (info->infrastructure) {
+        cap |= WLANCOND_INFRA;
     } else {
-        return WLAN_SECURITY_OPEN;
+        /* TODO: WLANCOND_ADHOC, WLANCOND_AUTO ? */
     }
 
-    /* XXX: Should never be reached */
-    return 0;
+    if (is_wpa_eap || is_wpa2_eap) {
+        attr |= WLAN_SECURITY_WPA_PSK;
+        cap |= WLANCOND_WPA_EAP;
+    } else if (is_wpa_psk || is_wpa2_psk) {
+        attr |= WLAN_SECURITY_WPA_PSK;
+        cap |= WLANCOND_WPA_PSK;
+    } else if (info->privacy) {
+        /* WEP has no WPA nor RSN key management, but does have privacy flag */
+        attr |= WLAN_SECURITY_WEP;
+        cap |= WLANCOND_WEP;
+    } else {
+        attr |= WLAN_SECURITY_OPEN;
+        cap |= WLANCOND_OPEN;
+    }
+
+    if (is_wpa2_eap || is_wpa2_psk) {
+        cap |= WLANCOND_WPA2;
+    }
+
+    /* TODO: WLANCOND rates; see wlancond.h */
+    /* TODO: WLANCOND encrypt/alg masks; see wlancond.h */
+
+    cap2nwattr(cap, &attr);
+    return attr;
 }
 
 int wpaicd_init(void)
