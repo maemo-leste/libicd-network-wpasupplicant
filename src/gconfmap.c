@@ -137,38 +137,6 @@ static gboolean get_iap_config_bool(GConfClient* gconf_client,
     return boolval;
 }
 
-GConfNetwork *alloc_gconf_network(void)
-{
-    GConfNetwork *net = malloc(sizeof(GConfNetwork));
-    if (net) {
-        memset(net, 0, sizeof(GConfNetwork));
-    }
-    return net;
-}
-
-void free_gconf_network(GConfNetwork * net)
-{
-    /* TODO: Also free other values in the sub structs */
-
-    /* wpapsk_config */
-    free(net->wpapsk_config.EAP_wpa_preshared_passphrase);
-
-
-    /* wep_config */
-    free(net->wep_config.wlan_wepkey1);
-    free(net->wep_config.wlan_wepkey2);
-    free(net->wep_config.wlan_wepkey3);
-    free(net->wep_config.wlan_wepkey4);
-
-    /* generic */
-    free(net->wlan_security);
-    free(net->name);
-    free(net->wlan_ssid);
-    free(net->type);
-    free(net->id);
-    free(net);
-}
-
 static char *get_iap_name_from_path(char *path)
 {
     char *saveptr = NULL;
@@ -216,6 +184,15 @@ GConfNetwork *get_gconf_network_iapname(GConfClient * client,
     return r;
 }
 
+GConfNetwork *alloc_gconf_network(void)
+{
+    GConfNetwork *net = malloc(sizeof(GConfNetwork));
+    if (net) {
+        memset(net, 0, sizeof(GConfNetwork));
+    }
+    return net;
+}
+
 GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
 {
     GConfNetwork *net = alloc_gconf_network();
@@ -242,9 +219,44 @@ GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
                    wpapsk_config.EAP_wpa_preshared_passphrase,
                    "EAP_wpa_preshared_passphrase")
 
-        /* TODO: All other values in GConfNetwork */
-        return net;
+    /* wpaeap_config */
+    GCONF_IAP_READ(get_iap_config_bool, wpaeap_config.EAP_MSCHAPV2_password_prompt, "EAP_MSCHAPV2_password_prompt")
+    GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_MSCHAPV2_username, "EAP_MSCHAPV2_username")
+    GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_MSCHAPV2_password, "EAP_MSCHAPV2_password")
+    GCONF_IAP_READ(get_iap_config_bool, wpaeap_config.EAP_wpa2_only_mode, "EAP_wpa2_only_mode")
+    GCONF_IAP_READ(get_iap_config_int, wpaeap_config.EAP_default_type, "EAP_default_type")
+    GCONF_IAP_READ(get_iap_config_int, wpaeap_config.PEAP_tunneled_eap_type, "PEAP_tunneled_eap_type")
+
+    /* TODO: All other values in GConfNetwork */
+    return net;
 }
+
+void free_gconf_network(GConfNetwork * net)
+{
+    /* TODO: Also free other values in the sub structs */
+    /* wpaeap_config */
+    free(net->wpaeap_config.EAP_MSCHAPV2_username);
+    free(net->wpaeap_config.EAP_MSCHAPV2_password);
+
+    /* wpapsk_config */
+    free(net->wpapsk_config.EAP_wpa_preshared_passphrase);
+
+
+    /* wep_config */
+    free(net->wep_config.wlan_wepkey1);
+    free(net->wep_config.wlan_wepkey2);
+    free(net->wep_config.wlan_wepkey3);
+    free(net->wep_config.wlan_wepkey4);
+
+    /* generic */
+    free(net->wlan_security);
+    free(net->name);
+    free(net->wlan_ssid);
+    free(net->type);
+    free(net->id);
+    free(net);
+}
+
 
 GSList *get_gconf_networks(GConfClient * client)
 {
@@ -282,6 +294,122 @@ GSList *get_gconf_networks(GConfClient * client)
     return ret;
 }
 
+static gboolean gconfnet_to_wpadbus_open(GConfNetwork *net, GVariantBuilder *b) {
+    g_variant_builder_add(b, "{sv}", "key_mgmt",
+                          g_variant_new_string("NONE"));
+    g_variant_builder_add(b, "{sv}", "auth_alg",
+                          g_variant_new_string("OPEN"));
+
+    return TRUE;
+}
+
+static gboolean gconfnet_to_wpadbus_wep(GConfNetwork *net, GVariantBuilder *b) {
+    switch (net->wep_config.wlan_wepdefkey) {
+        case 1:
+            g_variant_builder_add(b, "{sv}", "wep_key0",
+                                  g_variant_new_string(net->wep_config.wlan_wepkey1));
+
+            break;
+        case 2:
+            g_variant_builder_add(b, "{sv}", "wep_key1",
+                                  g_variant_new_string(net->wep_config.wlan_wepkey2));
+
+            break;
+        case 3:
+            g_variant_builder_add(b, "{sv}", "wep_key2",
+                                  g_variant_new_string(net->wep_config.wlan_wepkey3));
+
+            break;
+        case 4:
+            g_variant_builder_add(b, "{sv}", "wep_key3",
+                                  g_variant_new_string(net->wep_config.wlan_wepkey4));
+
+            break;
+        default:
+            fprintf(stderr, "wlan_wepdefkey not in (1,2,3,4): %d\n", net->wep_config.wlan_wepdefkey);
+            return FALSE;
+    }
+
+    g_variant_builder_add(b, "{sv}", "wep_tx_keyidx",
+                          g_variant_new_int32(net->wep_config.wlan_wepdefkey - 1));
+
+    g_variant_builder_add(b, "{sv}", "key_mgmt",
+                          g_variant_new_string("NONE"));
+
+    /* FIXME: WEP104 == 104 bits password, aka 26 hex digits, WEP40 == 40
+     * bits password, aka 10 hex digits. We just set both for now, not sure
+     * if we need to differentiate. (We could, based on the
+     * 'net->wep_config.wlanwepkey?' lengths.)
+     * Let's just add both for now
+     */
+    g_variant_builder_add(b, "{sv}", "group",
+                          g_variant_new_string("WEP104 WEP40"));
+
+
+    /* XXX: I think this is not always correct, there might be two different
+     * WEP types... But how do we differentiate them?
+     * openwrt shows: "WEP Open System" and "WEP Shared Key" (WEP104)
+     * I believe WEP Open System might actually just be an open wifi with
+     * some encryption, and only WEP Shared Key requires auth...
+     * http://wirelessnetworkssecurity.blogspot.nl/2013/01/wep-open-key-vs-wep-shared-key.html
+    */
+
+    return TRUE;
+}
+
+static gboolean gconfnet_to_wpadbus_wpapsk(GConfNetwork *net, GVariantBuilder *b) {
+    g_variant_builder_add(b, "{sv}", "psk",
+                          g_variant_new_string(net->
+                                               wpapsk_config.EAP_wpa_preshared_passphrase));
+
+    g_variant_builder_add(b, "{sv}", "key_mgmt",
+                          g_variant_new_string("WPA-PSK"));
+
+    return TRUE;
+}
+
+static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b) {
+    /* If statements taken from libicd-network-wlan src/wlan.c
+     * wlan_get_eap_autoconnect, last commit by Pali */
+    int eap_type = net->wpaeap_config.EAP_default_type;
+    int eap_inner_type = net->wpaeap_config.PEAP_tunneled_eap_type;
+
+    if (eap_type != EAP_TLS && eap_type != EAP_TTLS && eap_type != EAP_PEAP) {
+        fprintf(stderr, "Unsupported EAP type: %d\n", eap_type);
+        return FALSE;
+    }
+
+    if (eap_type == EAP_TTLS && eap_inner_type != EAP_GTC && eap_inner_type != EAP_MS && eap_inner_type != EAP_TTLS_PAP && eap_inner_type != EAP_TTLS_MS) {
+        fprintf(stderr, "Unsupported inner EAP type: %d\n", eap_inner_type);
+        return FALSE;
+    }
+    if (eap_type == EAP_PEAP && eap_inner_type != EAP_GTC && eap_inner_type != EAP_MS) {
+        fprintf(stderr, "Unsupported inner EAP type: %d\n", eap_inner_type);
+        return FALSE;
+    }
+
+    /* Add WPA-EAP key_mgmt, shared with all following code/config */
+    g_variant_builder_add(b, "{sv}", "key_mgmt",
+                          g_variant_new_string("WPA-EAP"));
+
+    if (eap_type == EAP_PEAP && eap_inner_type == EAP_MS) {
+        /* TODO: Check char* values for EAP_MSCHAPV2_username etc to not be empty? */
+        g_variant_builder_add(b, "{sv}", "eap",
+                              g_variant_new_string("PEAP"));
+        g_variant_builder_add(b, "{sv}", "identity",
+                              g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_username));
+        g_variant_builder_add(b, "{sv}", "password",
+                              g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_password));
+
+        /* TODO: Client certificate file */
+    } else {
+        /* TODO: Only PEAP + MSCHAPv2 tested currently */
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
 {
     GVariant *args = NULL;
@@ -299,72 +427,21 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
     }
 
     if (!strcmp(net->wlan_security, "NONE")) {
-        g_variant_builder_add(b, "{sv}", "key_mgmt",
-                              g_variant_new_string("NONE"));
-        g_variant_builder_add(b, "{sv}", "auth_alg",
-                              g_variant_new_string("OPEN"));
-    } else if (!strcmp(net->wlan_security, "WEP")) {
-        switch (net->wep_config.wlan_wepdefkey) {
-            case 1:
-                g_variant_builder_add(b, "{sv}", "wep_key0",
-                                      g_variant_new_string(net->wep_config.wlan_wepkey1));
-
-                break;
-            case 2:
-                g_variant_builder_add(b, "{sv}", "wep_key1",
-                                      g_variant_new_string(net->wep_config.wlan_wepkey2));
-
-                break;
-            case 3:
-                g_variant_builder_add(b, "{sv}", "wep_key2",
-                                      g_variant_new_string(net->wep_config.wlan_wepkey3));
-
-                break;
-            case 4:
-                g_variant_builder_add(b, "{sv}", "wep_key3",
-                                      g_variant_new_string(net->wep_config.wlan_wepkey4));
-
-                break;
-            default:
-                fprintf(stderr, "wlan_wepdefkey not in (1,2,3,4): %d\n", net->wep_config.wlan_wepdefkey);
-                goto fail;
-
+        if (!gconfnet_to_wpadbus_open(net, b)) {
+            goto fail;
         }
-        g_variant_builder_add(b, "{sv}", "wep_tx_keyidx",
-                              g_variant_new_int32(net->wep_config.wlan_wepdefkey - 1));
-
-        g_variant_builder_add(b, "{sv}", "key_mgmt",
-                              g_variant_new_string("NONE"));
-
-        /* FIXME: WEP104 == 104 bits password, aka 26 hex digits, WEP40 == 40
-         * bits password, aka 10 hex digits. We just set both for now, not sure
-         * if we need to differentiate. (We could, based on the
-         * 'net->wep_config.wlanwepkey?' lengths.)
-         * Let's just add both for now
-         */
-        g_variant_builder_add(b, "{sv}", "group",
-                              g_variant_new_string("WEP104 WEP40"));
-
-
-        /* XXX: I think this is not always correct, there might be two different
-         * WEP types... But how do we differentiate them?
-         * openwrt shows: "WEP Open System" and "WEP Shared Key" (WEP104)
-         * I believe WEP Open System might actually just be an open wifi with
-         * some encryption, and only WEP Shared Key requires auth...
-         * http://wirelessnetworkssecurity.blogspot.nl/2013/01/wep-open-key-vs-wep-shared-key.html
-        */
+    } else if (!strcmp(net->wlan_security, "WEP")) {
+        if (!gconfnet_to_wpadbus_wep(net, b)) {
+            goto fail;
+        }
     } else if (!strcmp(net->wlan_security, "WPA_PSK")) {
-        /* Go over net->wpapsk_config */
-        g_variant_builder_add(b, "{sv}", "psk",
-                              g_variant_new_string(net->
-                                                   wpapsk_config.EAP_wpa_preshared_passphrase));
-
-        g_variant_builder_add(b, "{sv}", "key_mgmt",
-                              g_variant_new_string("WPA-PSK"));
-
+        if (!gconfnet_to_wpadbus_wpapsk(net, b)) {
+            goto fail;
+        }
     } else if (!strcmp(net->wlan_security, "WPA_EAP")) {
-        /* Go over net->wpaeap_config */
-        goto fail;
+        if (!gconfnet_to_wpadbus_wpaeap(net, b)) {
+            goto fail;
+        }
     }
 
     /* Do not need to be unref'd, call_sync does that apparently */

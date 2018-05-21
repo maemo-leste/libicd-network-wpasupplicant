@@ -41,7 +41,6 @@ TODO:
    Missing keys:
    - wlan_tx_power
    - nai
-   - temporary
    - wlan_hidden
    - powersave_after_scan
    - wlan_powersave
@@ -52,6 +51,16 @@ TODO:
    - TLS_server_authenticates_client_policy_in_client
 */
 
+/* FIXME/TODO/XXX: Share or take-from connui */
+#define EAP_GTC         6
+#define EAP_TLS         13
+#define EAP_TTLS        21
+#define EAP_PEAP        25
+#define EAP_MS          26
+#define EAP_TTLS_PAP        98
+#define EAP_TTLS_MS     99
+
+
 typedef struct {
     /* if (get_iap_config_bool(ctx->gconf_client, NULL, * "allow_wep_ciphers_in_WPA", FALSE)) */
     gboolean allow_wep_ciphers_in_WPA;
@@ -59,11 +68,10 @@ typedef struct {
 } GConfNetworkPolicies;
 
 typedef struct {
-    /* get_iap_config_bool(ctx->gconf_client, iap_name, "EAP_MSCHAPV2_password_prompt", FALSE); */
     gboolean EAP_MSCHAPV2_password_prompt;
 
-    /* get_iap_config_string(ctx->gconf_client, iap_name, "EAP_MSCHAPV2_password"); */
-    gboolean EAP_MSCHAPV2_password;
+    char* EAP_MSCHAPV2_username;
+    char* EAP_MSCHAPV2_password;
 
     /* get_iap_config_bool(ctx->gconf_client, iap, "EAP_wpa2_only_mode", FALSE); */
     gboolean EAP_wpa2_only_mode;
