@@ -424,6 +424,10 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
 
     /* TTLS options */
     } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_TTLS_PAP)  {
+        if (net->wpaeap_config.EAP_MSCHAPV2_username == NULL ||
+            net->wpaeap_config.EAP_MSCHAPV2_password == NULL)
+            return FALSE;
+
         g_variant_builder_add(b, "{sv}", "eap",
                               g_variant_new_string("TTLS"));
         g_variant_builder_add(b, "{sv}", "phase2",
@@ -439,6 +443,11 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
     } else if (eap_type == EAP_TTLS && (eap_inner_type == EAP_TTLS_MS || eap_inner_type == EAP_MS))  {
         // XXX: For now we assume EAP_TTLS_MS and EAP_MS are the same. Not sure
         // how they are different...
+
+        if (net->wpaeap_config.EAP_MSCHAPV2_username == NULL ||
+            net->wpaeap_config.EAP_MSCHAPV2_password == NULL)
+            return FALSE;
+
         g_variant_builder_add(b, "{sv}", "eap",
                               g_variant_new_string("TTLS"));
         g_variant_builder_add(b, "{sv}", "phase2",
