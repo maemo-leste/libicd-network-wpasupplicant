@@ -168,6 +168,7 @@ static char *get_iap_name_from_path(char *path)
 { \
 	net->structvar = func(client, name, var, &error); \
 	if (error != NULL) { \
+        fprintf(stderr, "Failed to read %s: %s\n", #var, error->message); \
 		g_error_free(error); \
 		free_gconf_network(net); \
 		return NULL; \
@@ -230,7 +231,7 @@ GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
     GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_GTC_passcode, "EAP_GTC_passcode")
     GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_TLS_PEAP_client_certificate_file, "EAP_TLS_PEAP_client_certificate_file")
     GCONF_IAP_READ(get_iap_config_string, wpaeap_config.EAP_manual_username, "EAP_manual_username")
-    GCONF_IAP_READ(get_iap_config_int, wpaeap_config.EAP_use_manual_username, "EAP_use_manual_username")
+    GCONF_IAP_READ(get_iap_config_bool, wpaeap_config.EAP_use_manual_username, "EAP_use_manual_username")
 
     /* TODO: All other values in GConfNetwork */
     return net;
