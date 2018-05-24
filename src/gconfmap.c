@@ -404,14 +404,21 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
 
     /* PEAP options */
     if (eap_type == EAP_PEAP && eap_inner_type == EAP_MS) {
-        /* TODO: Check char* values for EAP_MSCHAPV2_username etc to not be empty? */
+        if (net->wpaeap_config.EAP_MSCHAPV2_username == NULL ||
+            net->wpaeap_config.EAP_MSCHAPV2_password == NULL)
+            return FALSE;
+
         g_variant_builder_add(b, "{sv}", "eap",
                               g_variant_new_string("PEAP"));
+        g_variant_builder_add(b, "{sv}", "phase2",
+                              g_variant_new_string("\"auth=MSCHAPV2\""));
+
         g_variant_builder_add(b, "{sv}", "identity",
                               g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_username));
         g_variant_builder_add(b, "{sv}", "password",
                               g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_password));
         /* TODO: (Client) certificate file? */
+
     } else if (eap_type == EAP_PEAP && eap_inner_type == EAP_GTC) {
         return FALSE;
 
@@ -419,8 +426,8 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
     } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_TTLS_PAP)  {
         g_variant_builder_add(b, "{sv}", "eap",
                               g_variant_new_string("TTLS"));
-        g_variant_builder_add(b, "{sv}", "phase2=\"auth=PAP\"",
-                              g_variant_new_string("TTLS"));
+        g_variant_builder_add(b, "{sv}", "phase2",
+                              g_variant_new_string("\"auth=PAP\""));
         g_variant_builder_add(b, "{sv}", "identity",
                               g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_username));
         g_variant_builder_add(b, "{sv}", "password",
@@ -428,23 +435,32 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
         if (net->wpaeap_config.EAP_use_manual_username)
             g_variant_builder_add(b, "{sv}", "anonymous_identity",
                                   g_variant_new_string(net->wpaeap_config.EAP_manual_username));
-        return FALSE;
 
-    } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_TTLS_MS)  {
-        return FALSE;
-
-    } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_MS)  {
-        return FALSE;
+    } else if (eap_type == EAP_TTLS && (eap_inner_type == EAP_TTLS_MS || eap_inner_type == EAP_MS))  {
+        // XXX: For now we assume EAP_TTLS_MS and EAP_MS are the same. Not sure
+        // how they are different...
+        g_variant_builder_add(b, "{sv}", "eap",
+                              g_variant_new_string("TTLS"));
+        g_variant_builder_add(b, "{sv}", "phase2",
+                              g_variant_new_string("\"auth=MSCHAPV2\""));
+        g_variant_builder_add(b, "{sv}", "identity",
+                              g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_username));
+        g_variant_builder_add(b, "{sv}", "password",
+                              g_variant_new_string(net->wpaeap_config.EAP_MSCHAPV2_password));
+        if (net->wpaeap_config.EAP_use_manual_username)
+            g_variant_builder_add(b, "{sv}", "anonymous_identity",
+                                  g_variant_new_string(net->wpaeap_config.EAP_manual_username));
 
     } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_GTC)  {
         return FALSE;
 
-    /* TODO: EAP_TLS */
     } else if (eap_type == EAP_TLS)  {
+        /* TODO: EAP_TLS */
         /* EAP_TLS_PEAP_client_certificate_file */
         return FALSE;
+
     } else {
-        /* TODO: Only PEAP + MSCHAPv2 tested currently */
+        /* Unknown configuration */
         return FALSE;
     }
 
