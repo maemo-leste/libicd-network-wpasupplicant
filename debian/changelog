@@ -1,3 +1,10 @@
+libicd-network-wpasupplicant (0.1.2) unstable; urgency=low
+
+  * Fix anonymous identity (parsing) for EAP networks
+  * Add TTLS PAP and TTLS MSCHAPV2 support
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 25 May 2018 14:45:00 +0100
+
 libicd-network-wpasupplicant (0.1.1) unstable; urgency=low
 
   * Add basic EAP support
