@@ -1,0 +1,17 @@
+#!/bin/sh
+
+funcs="/etc/wpa_supplicant/functions.sh"
+
+dpkg-divert --add --package libicd-network-wpasupplicant \
+	--divert "${funcs}.dist" --rename "$funcs"
+
+cp "${funcs}.dist" "$funcs"
+ed -s "$funcs" <<EOF
+266
+s/$/ -u/
+.
+w
+q
+EOF
+
+exit 0

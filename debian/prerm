@@ -1,0 +1,8 @@
+#!/bin/sh
+
+funcs="/etc/wpa_supplicant/functions.sh"
+
+dpkg-divert --remove --package libicd-network-wpasupplicant \
+	--rename "$funcs"
+
+exit 0
