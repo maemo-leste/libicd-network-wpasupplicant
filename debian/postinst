@@ -6,12 +6,6 @@ dpkg-divert --add --package libicd-network-wpasupplicant \
 	--divert "${funcs}.dist" --rename "$funcs"
 
 cp "${funcs}.dist" "$funcs"
-ed -s "$funcs" <<EOF
-266
-s/$/ -u/
-.
-w
-q
-EOF
+sed '266s/$/ -u/' -i "$funcs"
 
 exit 0
