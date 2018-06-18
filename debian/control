@@ -12,7 +12,7 @@ Standards-Version: 3.6.2
 Package: libicd-network-wpasupplicant
 Section: net
 Architecture: any
-Depends: icd2 (>= 0.55), ${shlibs:Depends}, ${misc:Depends}, icd2-network-wpasupplicant-config, libicd-network-ipv4, ed
+Depends: icd2 (>= 0.55), ${shlibs:Depends}, ${misc:Depends}, icd2-network-wpasupplicant-config, libicd-network-ipv4
 Description: ICd2 plugin for WLAN networking
  The WLAN plugin for ICd2 that provides WLAN networking
 
