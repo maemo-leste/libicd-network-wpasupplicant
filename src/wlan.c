@@ -450,11 +450,13 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
         if (net) {
             if (done)
                 goto next;
-            if (strncmp(net->type, "WLAN_INFRA", 10) != 0) {    // FIXME
+
+            if (!(strncmp(net->type, "WLAN_INFRA", 10) == 0) ||
+                 (strncmp(net->type, "WLAN_ADHOC", 10) == 0)) {
                 goto next;
             }
+
             if (net->temporary) {
-                fprintf(stderr, "Temporary; skipping\n");
                 goto next;
             }
 

@@ -214,7 +214,6 @@ GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
     GCONF_IAP_READ(get_iap_config_string, wep_config.wlan_wepkey3, "wlan_wepkey3")
     GCONF_IAP_READ(get_iap_config_string, wep_config.wlan_wepkey4, "wlan_wepkey4")
 
-
     /* wpapsk_config */
     GCONF_IAP_READ(get_iap_config_string,
                    wpapsk_config.EAP_wpa_preshared_passphrase,
@@ -343,6 +342,7 @@ static gboolean gconfnet_to_wpadbus_wep(GConfNetwork *net, GVariantBuilder *b) {
     g_variant_builder_add(b, "{sv}", "wep_tx_keyidx",
                           g_variant_new_int32(net->wep_config.wlan_wepdefkey - 1));
 
+    // TODO: NONE or OPEN? (Depends on privacy bit?) */
     g_variant_builder_add(b, "{sv}", "key_mgmt",
                           g_variant_new_string("NONE"));
 
@@ -517,8 +517,17 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
     g_variant_builder_add(b, "{sv}", "ssid",
                           g_variant_new_string(net->wlan_ssid));
 
-    /* TODO: support ad-hoc */
-    if (strcmp(net->type, "WLAN_INFRA")) {
+    if (strcmp(net->type, "WLAN_ADHOC") == 0) {
+        goto fail;
+#if 0
+        g_variant_builder_add(b, "{sv}", "mode",
+                              g_variant_new_string("1"));
+        // We do not have this stored in gconf right now, see
+        // https://github.com/maemo-leste/bugtracker/issues/154
+        g_variant_builder_add(b, "{sv}", "frequency",
+                              g_variant_new_string("TODO")); // TODO
+#endif
+    } else if (strcmp(net->type, "WLAN_INFRA")) {
         goto fail;
     }
 
