@@ -164,6 +164,7 @@ struct wlan_context {
     guint stored_network_attrs;
     char *stored_network_id;
 
+    guint g_association_timer;
 #if 0
     struct icd_nw_api *network_api;
 
@@ -185,7 +186,6 @@ struct wlan_context {
 
     int used_channels;
 
-    guint g_association_timer;
     guint g_scan_timer;
 
     DBusPendingCall *disconnect_call;
