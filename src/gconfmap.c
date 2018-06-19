@@ -476,8 +476,21 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
                                   g_variant_new_string(net->wpaeap_config.EAP_manual_username));
 
     } else if (eap_type == EAP_TTLS && eap_inner_type == EAP_GTC)  {
-        return FALSE;
+        if (net->wpaeap_config.EAP_GTC_identity == NULL ||
+            net->wpaeap_config.EAP_GTC_passcode == NULL)
+            return FALSE;
 
+        g_variant_builder_add(b, "{sv}", "eap",
+                              g_variant_new_string("TTLS"));
+        g_variant_builder_add(b, "{sv}", "phase2",
+                              g_variant_new_string("\"auth=GTC\""));
+        g_variant_builder_add(b, "{sv}", "identity",
+                              g_variant_new_string(net->wpaeap_config.EAP_GTC_identity));
+        g_variant_builder_add(b, "{sv}", "password",
+                              g_variant_new_string(net->wpaeap_config.EAP_GTC_passcode));
+        if (net->wpaeap_config.EAP_use_manual_username)
+            g_variant_builder_add(b, "{sv}", "anonymous_identity",
+                                  g_variant_new_string(net->wpaeap_config.EAP_manual_username));
     } else if (eap_type == EAP_TLS)  {
         /* TODO: EAP_TLS */
         /* EAP_TLS_PEAP_client_certificate_file */
