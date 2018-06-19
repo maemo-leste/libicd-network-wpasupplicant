@@ -177,6 +177,13 @@ static void wlan_bring_up(const gchar * network_type,
 
     ENTER;
 
+    /* If we are not idle, first bring network down */
+    if (ctx->state != STATE_IDLE) {
+        link_up_cb(ICD_NW_TOO_MANY_CONNECTIONS, NULL, NULL, link_up_cb_token, NULL);
+        EXIT;
+        return;
+    }
+
     fprintf(stderr, "wlan_bring_up: %s\n", network_id);
 
     GConfNetwork *net = get_gconf_network_iapname(ctx->gconf_client, network_id);
