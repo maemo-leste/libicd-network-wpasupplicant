@@ -510,6 +510,8 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
     GVariant *args = NULL;
     GVariantBuilder *b;
 
+    /* TODO: Ensure to check EAP_wpa2_only_mode in wpa_psk and wpa_eap */
+
     b = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 
     g_variant_builder_add(b, "{sv}", "ssid",
@@ -517,7 +519,6 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
 
     /* TODO: support ad-hoc */
     if (strcmp(net->type, "WLAN_INFRA")) {
-        /* XXX: set auth_alg=NONE ? */
         goto fail;
     }
 

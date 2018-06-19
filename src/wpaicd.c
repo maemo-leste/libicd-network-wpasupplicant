@@ -639,7 +639,8 @@ guint wpaicd_bssinfo_to_network_attrs(BssInfo * info)
         attr |= WLAN_SECURITY_WPA_PSK;
         cap |= WLANCOND_WPA_PSK;
     } else if (info->privacy) {
-        /* WEP has no WPA nor RSN key management, but does have privacy flag */
+        /* WEP has no WPA nor RSN key management, but does have privacy flag,
+         * this likely needs to be reworked a bit more, but it works for now. */
         attr |= WLAN_SECURITY_WEP;
         cap |= WLANCOND_WEP;
     } else {

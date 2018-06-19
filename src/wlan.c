@@ -404,11 +404,13 @@ static int match_networks(BssInfo* info, GConfNetwork *net) {
             return 1;
     }
 
+    /* TODO: Ensure to check EAP_wpa2_only_mode in wpa_psk */
     if (strcmp(net->wlan_security, "WPA_PSK") == 0) {
         if (!(is_wpa_psk || is_wpa2_psk))
             return 1;
     }
 
+    /* TODO: Ensure to check EAP_wpa2_only_mode in wpa_eap */
     if (strcmp(net->wlan_security, "WPA_EAP") == 0) {
         if (!(is_wpa_eap|| is_wpa2_eap))
             return 1;
@@ -424,7 +426,8 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
     if (!ctx->scanning)
         return;
 
-    /* TODO: Check all allocation */
+    /* TODO: Check all allocation; specifically what we expect icd2 to
+     * free/manage */
 
     guint network_attrs = 0;
     char *network_id = NULL;

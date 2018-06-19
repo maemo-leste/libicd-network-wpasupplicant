@@ -46,6 +46,7 @@ TODO:
    - wlan_powersave
    - EAP_SIMPLE_CONFIG_device_password
    - TLS_server_authenticates_client_policy_in_client
+   -allow_wep_ciphers_in_WPA
 */
 
 /* FIXME/TODO/XXX: Share or take-from connui */
