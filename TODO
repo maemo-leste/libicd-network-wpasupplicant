@@ -1,5 +1,12 @@
 wpa-supplicant conversion task list:
 
+[ ] Check config vars against https://www.freebsd.org/cgi/man.cgi?wpa_supplicant.conf(5)
+[ ] Properly set WPA (WPA1) or RSN (WPA2) or both, depending on wpaicd info and gconf value about WPA2 only::
+
+     proto   List of acceptable protocols; one or more of: WPA (IEEE
+         802.11i/D3.0) and RSN (IEEE 802.11i).  WPA2 is another name for
+         RSN.  If not set this defaults to "WPA RSN".
+
 [X] Do not crash on auto scan
 [X] Re-add gconf support
 [X] Make plugin work with gconf values
@@ -13,20 +20,23 @@ wpa-supplicant conversion task list:
 [X] Rename package to libicd-network-wpasupplicant (from libicd-network-wlan) [in separate branch, needs fixes]
 [X] Implement other icd2 interfaces
 [X] Add states
+[X] Figure out how wpa_supplicant should be started (by networking init script for now)
+[ ] For network matching, match way more than just ssid.
+[ ] Look at auth failures and timeouts
+[X] Make (quick)connection dialog work by passing the right attrs
+[X] Add network attrs and local attrs (local attrs can be passed to icd2, which are all wpa_supplicant attrs possible, but then stored in the local-attr part... I guess)
 [ ] Restore -Werror
 [/] Run valgrind over code
-[ ] Look at auth failures and timeouts
-[ ] Test more complicated network setups (eduroam, ad-hoc...)
+[/] Test more complicated network setups (eduroam, ad-hoc...)
 [ ] Active or passive scan?
 [ ] Properly (re)add copyright where code was used/copied from previous module
 [ ] Rework g variant parsing using more complex g_variant_get calls
-[ ] Figure out how wpa_supplicant should be started
 [ ] Look at wpa_priv(8)
-[/] Add network attrs and local attrs (local attrs can be passed to icd2, which are all wpa_supplicant attrs possible, but then stored in the local-attr part... I guess)
 [ ] Refactor code: rename functions, macros, etc, make it a lot more clean
 [X] Test switching from a live wifi connection to another one
 [/] Implement network down notifications (lost connection, etc) - requires to keep network_id and such in struct
 [ ] Check if a WEP network that is "WEP Open System" actually has Privacy=True, and if it does, make sure that we consider it as open network, and not as network that needs a password, I think?
+[ ] Replace all fprintf with proper log statements
 
 
 
