@@ -87,6 +87,7 @@ static void wlan_bring_up(const gchar * network_type,
                           const gpointer link_up_cb_token, gpointer * private);
 static gboolean wlan_scan_timeout(struct wlan_context *ctx);
 static void wlan_set_state(struct wlan_context *ctx, iap_state state);
+static gboolean wlan_associate_timeout(void *data);
 
 /* ------------------------------------------------------------------------- */
 static enum icd_nw_levels map_rssi(int rssi)
@@ -309,6 +310,31 @@ static void wlan_statistics(const gchar * network_type,
     return;
 }
 
+static gboolean wlan_associate_timeout(void *data) {
+    struct wlan_context *ctx = (struct wlan_context*)data;
+
+    ENTER;
+
+    fprintf(stderr, "wlan_associate_timeout\n");
+
+    ctx->close_cb(ICD_NW_ERROR,
+                  ICD_DBUS_ERROR_NETWORK_ERROR,
+                  ctx->stored_network_type,
+                  ctx->stored_network_attrs, ctx->stored_network_id);
+
+    ctx->stored_network_type = NULL;
+    ctx->stored_network_id = NULL;
+    ctx->stored_network_attrs = 0;
+
+    wlan_set_state(ctx, STATE_IDLE);
+
+    ctx->g_association_timer = 0;
+
+    EXIT;
+
+    return FALSE;
+}
+
 static void wlan_state_change_cb(const char *state, void *data)
 {
     struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
@@ -329,15 +355,10 @@ static void wlan_state_change_cb(const char *state, void *data)
        * "unknown".
      */
 
-    /* TODO:
-     * - remove network properties if disconnected/disconnecting*/
-
-    /* XXX: wpa supplicant can on its own decide to reassociate without telling
-     * us, I guess ? */
-
-    /* XXX: Also look at current state */
     if (strcmp(state, "associating") == 0) {
         wlan_set_state(ctx, STATE_CONNECTING);
+
+        ctx->g_association_timer = g_timeout_add_seconds(30, wlan_associate_timeout, (void*)ctx);
     } else if (strcmp(state, "disconnected") == 0) {
         wlan_set_state(ctx, STATE_IDLE);
 
@@ -353,6 +374,9 @@ static void wlan_state_change_cb(const char *state, void *data)
     } else if (strcmp(state, "inactive") == 0) {
         wlan_set_state(ctx, STATE_IDLE);
     } else if (strcmp(state, "completed") == 0) {
+        if (ctx->g_association_timer)
+            g_source_remove(ctx->g_association_timer);
+
         if (ctx->link_up_cb) {
             ILOG_DEBUG(WLAN "SENDING SUCCESS NEXT LAYER");
             ctx->link_up_cb(ICD_NW_SUCCESS_NEXT_LAYER, NULL, "wlan0",   /* FIXME */
@@ -362,11 +386,6 @@ static void wlan_state_change_cb(const char *state, void *data)
 
         wlan_set_state(ctx, STATE_CONNECTED);
     }
-
-    /*
-     * close_cb function to inform ICd that the network connection is to be
-     * closed
-     */
 
     return;
 }
@@ -658,6 +677,8 @@ gboolean icd_nw_init(struct icd_nw_api *network_api,
     context->watch_cb = watch_cb;
 #endif
     context->close_cb = close_cb;
+
+    context->g_association_timer = 0;
 
     network_api->private = context;
 

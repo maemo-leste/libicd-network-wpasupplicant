@@ -22,7 +22,7 @@ wpa-supplicant conversion task list:
 [X] Add states
 [X] Figure out how wpa_supplicant should be started (by networking init script for now)
 [X] For network matching, match way more than just ssid.
-[ ] Look at auth failures and timeouts
+[X] Look at auth failures and timeouts
 [X] Make (quick)connection dialog work by passing the right attrs
 [X] Add network attrs and local attrs (local attrs can be passed to icd2, which are all wpa_supplicant attrs possible, but then stored in the local-attr part... I guess)
 [ ] Restore -Werror
