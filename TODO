@@ -24,7 +24,7 @@ wpa-supplicant conversion task list:
 [ ] Look at wpa_priv(8)
 [/] Add network attrs and local attrs (local attrs can be passed to icd2, which are all wpa_supplicant attrs possible, but then stored in the local-attr part... I guess)
 [ ] Refactor code: rename functions, macros, etc, make it a lot more clean
-[ ] Test switching from a live wifi connection to another one
+[X] Test switching from a live wifi connection to another one
 [/] Implement network down notifications (lost connection, etc) - requires to keep network_id and such in struct
 [ ] Check if a WEP network that is "WEP Open System" actually has Privacy=True, and if it does, make sure that we consider it as open network, and not as network that needs a password, I think?
 
