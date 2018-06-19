@@ -371,6 +371,52 @@ static void wlan_state_change_cb(const char *state, void *data)
     return;
 }
 
+static int match_networks(BssInfo* info, GConfNetwork *net) {
+    gboolean is_wpa2_psk = info->rsn.keymgmt_wpa_psk ||
+                           info->rsn.keymgmt_wpa_ft_psk ||
+                           info->rsn.keymgmt_wpa_psk_sha256;
+    gboolean is_wpa_psk =  info->wpa.keymgmt_wpa_psk;
+
+    gboolean is_wpa2_eap = info->rsn.keymgmt_wpa_eap ||
+                           info->rsn.keymgmt_wpa_ft_eap ||
+                           info->rsn.keymgmt_wpa_eap_sha256;
+    gboolean is_wpa_eap = info->wpa.keymgmt_wpa_eap;
+
+    if (strcmp(net->type, "WLAN_INFRA") == 0) {
+        if (!info->infrastructure)
+            return 1;
+    }
+
+    if (strcmp(net->type, "WLAN_ADHOC") == 0) {
+        if (info->infrastructure)
+            return 1;
+    }
+
+    if (strcmp(net->wlan_security, "NONE") == 0) {
+        if (is_wpa_eap || is_wpa2_eap || is_wpa_psk || is_wpa2_psk || info->privacy)
+            return 1;
+    }
+
+    if (strcmp(net->wlan_security, "WEP") == 0) {
+        if (is_wpa_eap || is_wpa2_eap || is_wpa_psk || is_wpa2_psk)
+            return 1;
+        if (!info->privacy)
+            return 1;
+    }
+
+    if (strcmp(net->wlan_security, "WPA_PSK") == 0) {
+        if (!(is_wpa_psk || is_wpa2_psk))
+            return 1;
+    }
+
+    if (strcmp(net->wlan_security, "WPA_EAP") == 0) {
+        if (!(is_wpa_eap|| is_wpa2_eap))
+            return 1;
+    }
+
+    return 0;
+}
+
 static void wlan_search_network_added_cb(BssInfo * info, void *data)
 {
     struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
@@ -411,7 +457,11 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
 
             /* TODO: Extend matching to include other attributes */
             if (strcmp(net->wlan_ssid, ssid) == 0) {
-                fprintf(stderr, "MATCH FOR: %s\n", ssid);
+                fprintf(stderr, "SSID MATCH FOR: %s | %s\n", ssid, net->name);
+                if (match_networks(info, net)) {
+                    fprintf(stderr, "ssid match, but attrs mismatch: %s | %s\n", ssid, net->name);
+                    goto next;
+                }
                 network_id = strdup(net->id);
 
                 /* XXX: network_name can be NULL if added via the dialog?? */
