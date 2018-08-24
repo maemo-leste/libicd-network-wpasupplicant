@@ -38,3 +38,14 @@ wpa-supplicant conversion task list:
 [/] Implement network down notifications (lost connection, etc) - requires to keep network_id and such in struct
 [ ] Check if a WEP network that is "WEP Open System" actually has Privacy=True, and if it does, make sure that we consider it as open network, and not as network that needs a password, I think?
 [ ] Replace all fprintf with proper log statements
+[ ] Look at autoconnect for EAP code -- we can't always autoconnect, sometimes
+    a password is required. This is currently not reflected anywhere
+[ ] Work with password dialogs
+[ ] Implement/add station IDs (now just "AAAAAA")
+[ ] Improve / clean up state handling
+
+
+[ ] look at ap_scan=1 (vs ap_scan=0)
+[ ] look at scan_ssid=1 (for hidden aps)
+[ ] look at passive_scan=(0|1) for passive scans instead of active ones
+    (privacy)
