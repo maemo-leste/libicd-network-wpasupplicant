@@ -1,3 +1,9 @@
+libicd-network-wpasupplicant (0.1.5) unstable; urgency=low
+
+  * Fix packaging and most of the divert
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Fri, 31 Aug 2018 18:43:42 +0200
+
 libicd-network-wpasupplicant (0.1.4) unstable; urgency=low
 
   * Have dbus autostart wpa_supplicant when we need it
