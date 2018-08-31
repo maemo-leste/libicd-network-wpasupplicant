@@ -12,28 +12,21 @@ Standards-Version: 3.6.2
 Package: libicd-network-wpasupplicant
 Section: net
 Architecture: any
-Depends: icd2 (>= 0.55), ${shlibs:Depends}, ${misc:Depends}, icd2-network-wpasupplicant-config, libicd-network-ipv4
+Depends: icd2 (>= 0.55), ${shlibs:Depends}, icd2-network-wpasupplicant-config, libicd-network-ipv4
 Description: ICd2 plugin for WLAN networking
  The WLAN plugin for ICd2 that provides WLAN networking
 
 Package: libicd-network-wpasupplicant-dev
 Section: devel
 Architecture: any
-Depends: ${shlibs:Depends}, icd2-dev (>= 0.87+fremantle7),
+Depends: libicd-network-wpasupplicant (= ${binary:Version}), icd2-dev (>= 0.87+fremantle7),
 Description: Header file which contains wlan capability and icd attribute
  handling functions.
-
-Package: libicd-network-wpasupplicant-dbg
-Section: net
-Architecture: any
-Depends: libicd-network-wpasupplicant (= ${source:Version})
-Description: Debug symbols for ICd2 network wpasupplicant plugin
- .
 
 Package: icd2-network-wpasupplicant-config
 Section: net
 Architecture: any
-Depends: icd2 (>= 0.2)
+Depends: ${misc:Depends}, icd2 (>= 0.2)
 Description: WLAN networking components configuration
  The WLAN plugin configuration pkg that is needed by wpasupplicant network
  module (this is the schema file containing wpasupplicant

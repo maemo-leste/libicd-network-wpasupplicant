@@ -20,12 +20,6 @@ set -e
 case "$1" in
     configure)
         /etc/osso-backup/restore.d/always/icd2_restore_ipv6.sh
-
-	# dh_gconf isn't working so we'll do it manually instead
-	# Note that if gconftool-2 command fails, we do not fail
-	# the postinst script so that SSU works in rescue mode
-	# (when dbus is not running). Fixes: NB#148235
-	gconftool-2 --install-schema-file=/etc/gconf/schemas/libicd-network-wpasupplicant.schemas || :
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
