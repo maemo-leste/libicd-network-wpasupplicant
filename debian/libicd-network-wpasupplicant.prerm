@@ -1,8 +1,12 @@
 #!/bin/sh
 
-funcs="/etc/wpa_supplicant/functions.sh"
+funcs="/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service"
 
-dpkg-divert --remove --package libicd-network-wpasupplicant \
-	--rename "$funcs"
+case "$1" in
+	purge)
+		dpkg-divert --remove --rename --package libicd-network-wpasupplicant \
+			"$funcs"
+		;;
+esac
 
 exit 0
