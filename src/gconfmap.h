@@ -29,6 +29,7 @@
 #define _GCONFMAP_H_
 
 #include <gio/gio.h>
+#include <icd/support/icd_log.h>
 
 #include <gconf/gconf-client.h>
 /*

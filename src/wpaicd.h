@@ -22,6 +22,7 @@
 #ifndef _ICDWPA_H_
 #define _ICDWPA_H_
 #include <gio/gio.h>
+#include <icd/support/icd_log.h>
 
 #include "wpasupplicant-defs.h"
 

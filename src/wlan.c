@@ -141,7 +141,7 @@ static void wlan_take_down(const gchar * network_type,
     struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
     (void)ctx;
-    fprintf(stderr, "WLAN TAKE DOWN\n");
+    ILOG_INFO("wlan_take_down");
 
     wpaicd_remove_all_networks();
     link_down_cb(ICD_NW_SUCCESS_NEXT_LAYER, link_down_cb_token);
@@ -185,16 +185,16 @@ static void wlan_bring_up(const gchar * network_type,
         return;
     }
 
-    fprintf(stderr, "wlan_bring_up: %s\n", network_id);
+    ILOG_INFO("wlan_bring_up: %s", network_id);
 
     GConfNetwork *net = get_gconf_network_iapname(ctx->gconf_client, network_id);
     if (net == NULL) {
-        fprintf(stderr, "Cannot connect to network: net == NULL\n");
+        ILOG_ERR("Cannot connect to network: net == NULL");
         link_up_cb(ICD_NW_ERROR, NULL, NULL, link_up_cb_token, NULL);
 
         return;
     }
-    fprintf(stderr, "Got network: %s, %s\n", net->name, net->wlan_ssid);
+    ILOG_DEBUG("Got network: %s, %s", net->name, net->wlan_ssid);
 
     ctx->link_up_cb = link_up_cb;
     ctx->link_up_cb_token = link_up_cb_token;
@@ -202,13 +202,13 @@ static void wlan_bring_up(const gchar * network_type,
     char *path = NULL;
     path = wpaicd_add_network(net);
     if (path == NULL) {
-        fprintf(stderr, "wpaicd_add_network failed\n");
+        ILOG_ERR("wpaicd_add_network failed");
         link_up_cb(ICD_NW_ERROR, NULL, NULL, link_up_cb_token, NULL);
         goto fail1;
     }
 
     if (wpaicd_select_network(path)) {
-        fprintf(stderr, "wpaicd_select_network failed\n");
+        ILOG_ERR("wpaicd_select_network failed");
         link_up_cb(ICD_NW_ERROR, NULL, NULL, link_up_cb_token, NULL);
         goto fail2;
     }
@@ -238,7 +238,7 @@ static gboolean wlan_scan_timeout(struct wlan_context *ctx)
 {
     ENTER;
 
-    fprintf(stderr, "wlan_scan_timeout\n");
+    ILOG_DEBUG("wlan_scan_timeout");
 
     ctx->search_cb(ICD_NW_SEARCH_COMPLETE,
                    NULL,
@@ -275,7 +275,7 @@ static void wlan_statistics(const gchar * network_type,
 
     ENTER;
 
-    fprintf(stderr, "WLAN STATISTICS\n");
+    ILOG_DEBUG("wlan_statistics");
 
     // XXX: Also support stats for other states (?)
     if (ctx->state == STATE_IDLE) {
@@ -286,7 +286,7 @@ static void wlan_statistics(const gchar * network_type,
     BssInfo *info = wpaicd_current_bss_info();
 
     if (info == NULL) {
-        fprintf(stderr, "ctx->state != STATE_IDLE, but we have no bss?\n");
+        ILOG_ERR("ctx->state != STATE_IDLE, but we have no bss?");
         return;
     }
 
@@ -315,7 +315,7 @@ static gboolean wlan_associate_timeout(void *data) {
 
     ENTER;
 
-    fprintf(stderr, "wlan_associate_timeout\n");
+    ILOG_DEBUG("wlan_associate_timeout");
 
     ctx->close_cb(ICD_NW_ERROR,
                   ICD_DBUS_ERROR_NETWORK_ERROR,
@@ -339,7 +339,7 @@ static void wlan_state_change_cb(const char *state, void *data)
 {
     struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
 
-    fprintf(stderr, "wlan_state_change_cb: current state: %s\n", state);
+    ILOG_INFO("wlan_state_change_cb: current state: %s", state);
 
     /*
        wpa_supplicant state of the interface. Possible values are:
@@ -481,9 +481,9 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
 
             /* TODO: Extend matching to include other attributes */
             if (strcmp(net->wlan_ssid, ssid) == 0) {
-                fprintf(stderr, "SSID MATCH FOR: %s | %s\n", ssid, net->name);
+                ILOG_DEBUG("SSID MATCH FOR: %s | %s", ssid, net->name);
                 if (match_networks(info, net)) {
-                    fprintf(stderr, "ssid match, but attrs mismatch: %s | %s\n", ssid, net->name);
+                    ILOG_INFO("ssid match, but attrs mismatch: %s | %s", ssid, net->name);
                     goto next;
                 }
                 network_id = strdup(net->id);
@@ -526,7 +526,7 @@ static void wlan_search_scan_done_cb(int ret, void *data)
 {
     struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
 
-    fprintf(stderr, "SCAN DONE\n");
+    ILOG_DEBUG("SCAN DONE");
     if (!ctx->scanning)
         return;
 
@@ -550,7 +550,7 @@ static void wlan_start_search(const gchar * network_type,
 {
     struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
-    fprintf(stderr, "STARTING SEARCH\n");
+    ILOG_DEBUG("wlan_start_search");
 
     if (ctx->scanning) {
         goto scan_failed;
@@ -567,7 +567,7 @@ static void wlan_start_search(const gchar * network_type,
         goto done;
 
  scan_failed:
-    fprintf(stderr, "Starting scan failed.\n");
+    ILOG_CRIT("Starting scan failed.");
     wlan_scan_timeout(ctx);
 
  done:
@@ -620,7 +620,7 @@ static void wlan_destruct(gpointer * private)
 {
     struct wlan_context *ctx = get_wlan_context_from_icd(private);
 
-    fprintf(stderr, "DESTRUCT\n");
+    ILOG_INFO("wlan_destruct");
 
     ENTER;
 
@@ -632,7 +632,7 @@ static void wlan_destruct(gpointer * private)
 
 static void wlan_set_state(struct wlan_context *ctx, iap_state state)
 {
-    fprintf(stderr, "wlan_set_state: %d -> %d\n", ctx->state, state);
+    ILOG_INFO("wlan_set_state: %d -> %d", ctx->state, state);
     ctx->state = state;
 }
 
@@ -653,7 +653,7 @@ gboolean icd_nw_init(struct icd_nw_api *network_api,
 {
     struct wlan_context *context;
 
-    fprintf(stderr, "%s initializing\n", PACKAGE_STRING);
+    ILOG_INFO("%s initializing", PACKAGE_STRING);
 
     network_api->version = ICD_NW_MODULE_VERSION;
     network_api->link_down = wlan_take_down;
@@ -683,7 +683,7 @@ gboolean icd_nw_init(struct icd_nw_api *network_api,
     network_api->private = context;
 
     if (wpaicd_init()) {
-        fprintf(stderr, "Failed to set up wpaicd\n");
+        ILOG_CRIT("Failed to set up wpaicd");
         g_free(context);
         return FALSE;
     }

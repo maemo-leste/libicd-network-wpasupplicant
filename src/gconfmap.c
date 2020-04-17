@@ -168,7 +168,7 @@ static char *get_iap_name_from_path(char *path)
 { \
 	net->structvar = func(client, name, var, &error); \
 	if (error != NULL) { \
-        fprintf(stderr, "Failed to read %s: %s\n", #var, error->message); \
+        ILOG_ERR("Failed to read %s: %s", #var, error->message); \
 		g_error_free(error); \
 		free_gconf_network(net); \
 		return NULL; \
@@ -277,7 +277,7 @@ GSList *get_gconf_networks(GConfClient * client)
     iap_list = gconf_client_all_dirs(client, ICD_GCONF_PATH, &error);
 
     if (error != NULL) {
-        fprintf(stderr, "Cannot get dirs in gconf:%s \n", error->message);
+        ILOG_ERR("Cannot get dirs in gconf: %s", error->message);
         g_error_free(error);
         return NULL;
     }
@@ -335,7 +335,7 @@ static gboolean gconfnet_to_wpadbus_wep(GConfNetwork *net, GVariantBuilder *b) {
 
             break;
         default:
-            fprintf(stderr, "wlan_wepdefkey not in (1,2,3,4): %d\n", net->wep_config.wlan_wepdefkey);
+            ILOG_ERR("wlan_wepdefkey not in (1,2,3,4): %d", net->wep_config.wlan_wepdefkey);
             return FALSE;
     }
 
@@ -385,16 +385,16 @@ static gboolean gconfnet_to_wpadbus_wpaeap(GConfNetwork *net, GVariantBuilder *b
     int eap_inner_type = net->wpaeap_config.PEAP_tunneled_eap_type;
 
     if (eap_type != EAP_TLS && eap_type != EAP_TTLS && eap_type != EAP_PEAP) {
-        fprintf(stderr, "Unsupported EAP type: %d\n", eap_type);
+        ILOG_ERR("Unsupported EAP type: %d", eap_type);
         return FALSE;
     }
 
     if (eap_type == EAP_TTLS && eap_inner_type != EAP_GTC && eap_inner_type != EAP_MS && eap_inner_type != EAP_TTLS_PAP && eap_inner_type != EAP_TTLS_MS) {
-        fprintf(stderr, "Unsupported inner EAP type: %d\n", eap_inner_type);
+        ILOG_ERR("Unsupported inner EAP type: %d", eap_inner_type);
         return FALSE;
     }
     if (eap_type == EAP_PEAP && eap_inner_type != EAP_GTC && eap_inner_type != EAP_MS) {
-        fprintf(stderr, "Unsupported inner EAP type: %d\n", eap_inner_type);
+        ILOG_ERR("Unsupported inner EAP type: %d", eap_inner_type);
         return FALSE;
     }
 
@@ -568,7 +568,7 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
 
     /* XXX: This should be debug only */
     char *pr = g_variant_print(args, TRUE);
-    fprintf(stderr, "gconfnet_to_wpadbus: %s\n", pr);
+    ILOG_DEBUG("gconfnet_to_wpadbus: %s", pr);
     free(pr);
 
 

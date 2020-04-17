@@ -14,6 +14,7 @@
 #include <dbus/dbus.h>
 #include <gconf/gconf-client.h>
 
+#include <icd/support/icd_log.h>
 #include <icd/network_api.h>
 
 #ifdef DEBUG
@@ -71,42 +72,6 @@ static int debug_print_level = 0;
 		debug_print_level--;					\
 		PDEBUG("WLAN:<%s exit\n", spaces);			\
 	}
-
-/** log on level DEBUG */
-#undef ILOG_DEBUG
-#define ILOG_DEBUG(args...) do {			\
-		if (icd_log_get_level() <= ICD_DEBUG)	\
-			PDEBUG(args); printf("\n");	\
-	} while (0)
-
-/** log on level INFO */
-#undef ILOG_INFO
-#define ILOG_INFO(args...) do {				\
-		if (icd_log_get_level() <= ICD_INFO)	\
-			PDEBUG(args); printf("\n");	\
-	} while (0)
-
-/** log on level WARN */
-#undef ILOG_WARN
-#define ILOG_WARN(args...) do {				\
-		if (icd_log_get_level() <= ICD_WARN)	\
-			PDEBUG(args); printf("\n");	\
-} while (0)
-
-/** log on level ERR */
-#undef ILOG_ERR
-#define ILOG_ERR(args...) do {				\
-		if (icd_log_get_level() <= ICD_ERR)	\
-			PDEBUG(args); printf("\n");	\
-	} while (0)
-
-/** log on level CRIT */
-#undef ILOG_CRIT
-#define ILOG_CRIT(args...) do {				\
-		if (icd_log_get_level() <= ICD_CRIT)	\
-			PDEBUG(args); printf("\n");	\
-	} while (0)
-
 #else
 #define ENTER
 #define EXIT
