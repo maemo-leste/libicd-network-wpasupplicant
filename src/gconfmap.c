@@ -205,6 +205,7 @@ GConfNetwork *get_gconf_network(GConfClient * client, const char *name)
     GCONF_IAP_READ(get_iap_config_string, name, "name")
     GCONF_IAP_READ(get_iap_config_string, wlan_security, "wlan_security")
     GCONF_IAP_READ(get_iap_config_bool, temporary, "temporary")
+    GCONF_IAP_READ(get_iap_config_bool, hidden, "wlan_hidden")
 
     /* wep_config */
     GCONF_IAP_READ(get_iap_config_int, wep_config.wlan_wepdefkey, "wlan_wepdefkey")
@@ -530,6 +531,10 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
 
     g_variant_builder_add(b, "{sv}", "ssid",
                           g_variant_new_string(net->wlan_ssid));
+    if (net->hidden) {
+        g_variant_builder_add(b, "{sv}", "scan_ssid",
+                              g_variant_new_string("1"));
+    }
 
     if (strcmp(net->type, "WLAN_ADHOC") == 0) {
         goto fail;

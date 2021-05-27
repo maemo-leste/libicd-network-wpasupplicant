@@ -42,7 +42,6 @@ TODO:
    Missing keys:
    - wlan_tx_power
    - nai
-   - wlan_hidden
    - powersave_after_scan
    - wlan_powersave
    - EAP_SIMPLE_CONFIG_device_password
@@ -122,6 +121,7 @@ typedef struct {
     char *wlan_security;
 
     gboolean temporary;
+    gboolean hidden;
 
     GConfNetworkWPAEAP wpaeap_config;
     GConfNetworkWPAPSK wpapsk_config;
