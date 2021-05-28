@@ -62,7 +62,7 @@ static void print_bss_info(BssInfo info)
     free(ssid);
 
     WPALOG_DEBUG("mac_addr: ");
-    for (int i = 0; i < info.mac_addr_len; i += 1) {
+    for (gsize i = 0; i < info.mac_addr_len; i += 1) {
         // XXX: this prints a newline every time...
         WPALOG_DEBUG("%2x", info.mac_addr[i]);
     }

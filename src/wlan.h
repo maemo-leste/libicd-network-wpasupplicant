@@ -125,9 +125,9 @@ struct wlan_context {
 
     gboolean scanning;
 
-    char *stored_network_type;
+    const char *stored_network_type;
     guint stored_network_attrs;
-    char *stored_network_id;
+    const char *stored_network_id;
 
     guint g_association_timer;
 #if 0

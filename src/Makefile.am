@@ -19,6 +19,7 @@ LDADD = \
 	@ICD_LIBS@ \
 	@DMALLOC_LIBS@
 
+CFLAGS = -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Werror
 LDFLAGS = -avoid-version
 
 plugindir = @icd_plugin_dir@
