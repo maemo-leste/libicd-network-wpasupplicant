@@ -46,25 +46,25 @@ static void *state_change_data = NULL;
 static void print_bss_info(BssInfo info)
 {
     /* Print */
-    ILOG_DEBUG("Signal: %d", info.signal);
-    ILOG_DEBUG("Signal: %d", info.frequency);
+    WPALOG_DEBUG("Signal: %d", info.signal);
+    WPALOG_DEBUG("Signal: %d", info.frequency);
 
     if (info.infrastructure) {
-        ILOG_DEBUG("mode: infrastructure");
+        WPALOG_DEBUG("mode: infrastructure");
     } else {
-        ILOG_DEBUG("mode: ad-hoc");
+        WPALOG_DEBUG("mode: ad-hoc");
     }
 
     gchar *ssid = calloc((info.ssid_len + 1), sizeof(char));
     memcpy(ssid, info.ssid, info.ssid_len);
     ssid[info.ssid_len] = '\0';
-    ILOG_DEBUG("ssid: %s", ssid);
+    WPALOG_DEBUG("ssid: %s", ssid);
     free(ssid);
 
-    ILOG_DEBUG("mac_addr: ");
+    WPALOG_DEBUG("mac_addr: ");
     for (int i = 0; i < info.mac_addr_len; i += 1) {
         // XXX: this prints a newline every time...
-        ILOG_DEBUG("%2x", info.mac_addr[i]);
+        WPALOG_DEBUG("%2x", info.mac_addr[i]);
     }
 }
 
@@ -198,7 +198,7 @@ static GError *get_bss_info(const gchar * bss_path, BssInfo * info)
         return err;
     }
 #ifdef _WPA_ICD_DEBUG
-    ILOG_DEBUG("bss info: %s", g_variant_print(bss, TRUE));
+    WPALOG_DEBUG("bss info: %s", g_variant_print(bss, TRUE));
 #endif
     GVariant *bss_info = g_variant_get_child_value(bss, 0);
 
@@ -278,7 +278,7 @@ char *wpaicd_add_network(GConfNetwork * net)
                                                 &err);
 
     if (err != NULL) {
-        ILOG_ERR("Could not add network: %s", err->message);
+        WPALOG_ERR("Could not add network: %s", err->message);
         g_error_free(err);
         return NULL;
     }
@@ -310,7 +310,7 @@ char *wpaicd_current_network_path()
                                                 &err);
 
     if (err != NULL) {
-        ILOG_ERR("Could not get current network path: %s",
+        WPALOG_ERR("Could not get current network path: %s",
                 err->message);
         g_error_free(err);
         return NULL;
@@ -346,7 +346,7 @@ char *wpaicd_current_bss_path()
                                                 &err);
 
     if (err != NULL) {
-        ILOG_ERR("Could not get current network path: %s",
+        WPALOG_ERR("Could not get current network path: %s",
                   err->message);
         g_error_free(err);
         return NULL;
@@ -380,7 +380,7 @@ BssInfo *wpaicd_current_bss_info()
     }
 
     if (strcmp(path, "/") == 0) {
-        ILOG_ERR("No bss path!");
+        WPALOG_ERR("No bss path!");
         wpaicd_destroy_bss_info(info);
         return NULL;
     }
@@ -388,7 +388,7 @@ BssInfo *wpaicd_current_bss_info()
     err = get_bss_info(path, info);
 
     if (err != NULL) {
-        ILOG_ERR("Unable to get current bss info: %s", err->message);
+        WPALOG_ERR("Unable to get current bss info: %s", err->message);
         g_error_free(err);
         g_free(path);
         return NULL;
@@ -416,7 +416,7 @@ int wpaicd_remove_all_networks(void)
                                                 &err);
 
     if (err != NULL) {
-        ILOG_ERR("Could not add network: %s", err->message);
+        WPALOG_ERR("Could not add network: %s", err->message);
         g_error_free(err);
         return 1;
     }
@@ -447,7 +447,7 @@ int wpaicd_select_network(const char *network_path)
                                                 &err);
 
     if (err != NULL) {
-        ILOG_ERR("Could not select network: %s", err->message);
+        WPALOG_ERR("Could not select network: %s", err->message);
         g_error_free(err);
         return 1;
     }
@@ -460,7 +460,7 @@ int wpaicd_select_network(const char *network_path)
 static void property_changed(GVariant * params)
 {
 #ifdef _WPA_ICD_DEBUG
-    ILOG_DEBUG("properties_changed: %s", g_variant_print(params, TRUE));
+    WPALOG_DEBUG("properties_changed: %s", g_variant_print(params, TRUE));
 #endif
 
     GVariant *d = NULL;
@@ -495,14 +495,14 @@ static void on_scan_done(GDBusProxy * proxy,
     }
 
     if (strcmp(signal_name, "ScanDone")) {
-        ILOG_DEBUG("Ignoring: %s", signal_name);
+        WPALOG_DEBUG("Ignoring: %s", signal_name);
         return;
     }
 
     /* TODO: Ensure everything is freed, GError checking, Gerror re-initialisation, etc */
     /* TODO: Ensure that we properly deal with errors / missing values */
 
-    ILOG_DEBUG("on_scan_done. params: %s",
+    WPALOG_DEBUG("on_scan_done. params: %s",
             g_variant_print(parameters, TRUE));
 
     GError *error = NULL;
@@ -522,7 +522,7 @@ static void on_scan_done(GDBusProxy * proxy,
                                                  &error);
 
     if (bsss == NULL) {
-        ILOG_ERR("Could not get BSSs: %s", error->message);
+        WPALOG_ERR("Could not get BSSs: %s", error->message);
         g_error_free(error);
         return;
     }
@@ -542,7 +542,7 @@ static void on_scan_done(GDBusProxy * proxy,
 
         error = get_bss_info(bss_path, info);
         if (error) {
-            ILOG_ERR("Could not get BSS info for %s (%s)",
+            WPALOG_ERR("Could not get BSS info for %s (%s)",
                     bss_path, error->message);
             g_error_free(error);
 
@@ -598,7 +598,7 @@ int wpaicd_initiate_scan(void)
                                                 &error);
 
     if (error != NULL) {
-        ILOG_ERR("Could not start scan: %s", error->message);
+        WPALOG_ERR("Could not start scan: %s", error->message);
         g_error_free(error);
         return 1;
     }
@@ -661,7 +661,7 @@ int wpaicd_init(void)
 
     system_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
     if (system_bus == NULL) {
-        ILOG_CRIT("Could not get dbus system session bus: %s",
+        WPALOG_CRIT("Could not get dbus system session bus: %s",
                   error->message);
         g_error_free(error);
         return 1;
@@ -677,7 +677,7 @@ int wpaicd_init(void)
                                                     NULL, &error);
 
     if (error != NULL) {
-        ILOG_CRIT("Could not create interface proxy: %s",
+        WPALOG_CRIT("Could not create interface proxy: %s",
                   error->message);
         g_error_free(error);
         return 1;
@@ -723,7 +723,7 @@ void wpaicd_test_network_added_cb(BssInfo * info, void *data)
 
 void wpaicd_test_scan_done_cb(int ret, void *data)
 {
-    ILOG_DEBUG("scan done, ret: %d", ret);
+    WPALOG_DEBUG("scan done, ret: %d", ret);
 
     GConfClient *client;
     client = gconf_client_get_default();
@@ -746,21 +746,21 @@ void wpaicd_test_scan_done_cb(int ret, void *data)
 
 void wpaicd_test_state_change_cb(const char *state, void *data)
 {
-    ILOG_DEBUG("state change: %s", state);
+    WPALOG_DEBUG("state change: %s", state);
 
     char *net = wpaicd_current_network_path();
-    ILOG_DEBUG("Current network path: %s", net);
+    WPALOG_DEBUG("Current network path: %s", net);
     free(net);
 
     char *bss = wpaicd_current_bss_path();
-    ILOG_DEBUG("Current BSS path: %s", bss);
+    WPALOG_DEBUG("Current BSS path: %s", bss);
     free(bss);
 
     BssInfo *info = wpaicd_current_bss_info();
     char *tmpssid = malloc(info->ssid_len + 1);
     strncpy(tmpssid, info->ssid, info->ssid_len);
     tmpssid[info->ssid_len] = '\0';
-    ILOG_DEBUG("Current BSS ssid: %s", tmpssid);
+    WPALOG_DEBUG("Current BSS ssid: %s", tmpssid);
     free(tmpssid);
     wpaicd_destroy_bss_info(info);
 }
@@ -770,7 +770,7 @@ int main_loop(void)
     static GMainLoop *loop = NULL;
 
     if (wpaicd_init()) {
-        ILOG_CRIT("Failed to initialise");
+        WPALOG_CRIT("Failed to initialise");
         return 1;
     }
 

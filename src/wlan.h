@@ -14,7 +14,7 @@
 #include <dbus/dbus.h>
 #include <gconf/gconf-client.h>
 
-#include <icd/support/icd_log.h>
+#include "log-common.h"
 #include <icd/network_api.h>
 
 #ifdef DEBUG
