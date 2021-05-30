@@ -567,6 +567,27 @@ static void wlan_search_scan_done_cb(int ret, void *data)
     wlan_scan_timeout(ctx);
 }
 
+// This function finds any hidden APs in gconf and registers them with
+// wpa_supplicant. This is typically done before the scan, to actively probe for
+// them. wpaicd_remove_noncurrent_networks can help clear up these entries
+static void add_hidden_networks(struct wlan_context *ctx) {
+    GSList *iaps = get_gconf_networks(ctx->gconf_client);
+    GSList *iap_iter = iaps;
+    while (iap_iter) {
+        GConfNetwork *net = (GConfNetwork *) iap_iter->data;
+        if (net) {
+            if (net->hidden) {
+                WPALOG_DEBUG("Adding Hidden AP: %s\n", net->name);
+                wpaicd_add_network(net);
+            }
+
+            free_gconf_network(net);
+        }
+            iap_iter = g_slist_next(iap_iter);
+    }
+    g_slist_free(iaps);
+}
+
 /* ----------------------------------------------------------------------- */
 /**
  * Start wlan search
@@ -591,6 +612,13 @@ static void wlan_start_search(const gchar * network_type,
     }
 
     ENTER;
+
+    if (ctx->state == STATE_IDLE) {
+        wpaicd_remove_all_networks();
+    } else {
+        wpaicd_remove_noncurrent_networks();
+    }
+    add_hidden_networks(ctx);
 
     ctx->scanning = TRUE;
     ctx->search_cb = search_cb;

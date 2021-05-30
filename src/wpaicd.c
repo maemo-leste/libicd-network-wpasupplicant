@@ -326,6 +326,59 @@ char *wpaicd_current_network_path()
     return path;
 }
 
+
+void wpaicd_remove_noncurrent_networks(void)
+{
+    GError *err = NULL;
+
+    gchar* current_network = wpaicd_current_network_path();
+
+    GVariant *ret = g_dbus_connection_call_sync(system_bus,
+                                                WPA_DBUS_SERVICE,
+                                                TEST_INTERFACE_PATH,
+                                                DBUS_PROPERTIES_INTERFACE_NAME,
+                                                "Get",
+                                                g_variant_new("(ss)",
+                                                              WPA_DBUS_INTERFACES_INTERFACE,
+                                                              "Networks"),
+                                                NULL,
+                                                G_DBUS_CALL_FLAGS_NONE,
+                                                -1,
+                                                NULL,
+                                                &err);
+
+    if (err != NULL) {
+        WPALOG_ERR("Could not get network list: %s",
+                err->message);
+        g_error_free(err);
+        return;
+    }
+
+    GVariant *tuplecontent;
+    tuplecontent = g_variant_get_child_value (ret, 0);
+    GVariant *tuplecontent2;
+    tuplecontent2 = g_variant_get_child_value (tuplecontent, 0);
+
+    GVariantIter iter;
+    g_variant_iter_init(&iter, tuplecontent2);
+
+    char* objpath = NULL;
+    while (g_variant_iter_loop (&iter, "o", &objpath))
+    {
+        if (strcmp(objpath, current_network) == 0) {
+        } else {
+            WPALOG_DEBUG("Removing network from wpasupplicant: %s", objpath);
+            wpaicd_remove_network(objpath);
+        }
+    }
+
+    g_variant_unref(tuplecontent2);
+    g_variant_unref(tuplecontent);
+    g_variant_unref(ret);
+
+    return;
+}
+
 /* TODO: '/' means not connected to a BSS*/
 char *wpaicd_current_bss_path()
 {
@@ -417,6 +470,37 @@ int wpaicd_remove_all_networks(void)
 
     if (err != NULL) {
         WPALOG_ERR("Could not add network: %s", err->message);
+        g_error_free(err);
+        return 1;
+    }
+
+    g_variant_unref(ret);
+
+    return 0;
+}
+
+int wpaicd_remove_network(const char *network_path)
+{
+    GError *err = NULL;
+
+    GVariant *args;
+
+    args = g_variant_new("(o)", network_path);
+
+    GVariant *ret = g_dbus_connection_call_sync(system_bus,
+                                                WPA_DBUS_SERVICE,
+                                                TEST_INTERFACE_PATH,
+                                                WPA_DBUS_INTERFACES_INTERFACE,
+                                                "RemoveNetwork",
+                                                args,
+                                                NULL,
+                                                G_DBUS_CALL_FLAGS_NONE,
+                                                -1,
+                                                NULL,
+                                                &err);
+
+    if (err != NULL) {
+        WPALOG_ERR("Could not remove network: %s", err->message);
         g_error_free(err);
         return 1;
     }
