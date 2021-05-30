@@ -615,6 +615,7 @@ static void wlan_start_search(const gchar * network_type,
 
     if (ctx->state == STATE_IDLE) {
         wpaicd_remove_all_networks();
+        try_disconnect_wpa_control(ctx);
     } else {
         wpaicd_remove_noncurrent_networks();
     }
