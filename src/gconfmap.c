@@ -532,8 +532,14 @@ GVariant *gconfnet_to_wpadbus(GConfNetwork * net)
     g_variant_builder_add(b, "{sv}", "ssid",
                           g_variant_new_string(net->wlan_ssid));
     if (net->hidden) {
+        // Hidden APs need scan_ssid=1
         g_variant_builder_add(b, "{sv}", "scan_ssid",
-                              g_variant_new_string("1"));
+                              g_variant_new_int32(1));
+        // For wpa_supplicant to actually scan for a Hidden AP, we need to mark
+        // it as enabled. the wpa_suplicant control port code in src/wlan.c will
+        // ensure that wpa_supplicant doesn't connect to these on its own.
+        g_variant_builder_add(b, "{sv}", "disabled",
+                              g_variant_new_int32(0));
     }
 
     if (strcmp(net->type, "WLAN_ADHOC") == 0) {
