@@ -13,6 +13,7 @@
 #include <glib.h>
 #include <dbus/dbus.h>
 #include <gconf/gconf-client.h>
+#include <wpa_ctrl.h>
 
 #include "log-common.h"
 #include <icd/network_api.h>
@@ -130,6 +131,8 @@ struct wlan_context {
     const char *stored_network_id;
 
     guint g_association_timer;
+
+    struct wpa_ctrl *wpasup_ctrl;
 #if 0
     struct icd_nw_api *network_api;
 

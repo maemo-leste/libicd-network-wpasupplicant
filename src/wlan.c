@@ -118,6 +118,40 @@ static enum icd_nw_levels map_rssi(int rssi)
     return val;
 }
 
+
+static int try_open_wpa_control(struct wlan_context *ctx) {
+    if (!ctx->wpasup_ctrl) {
+        ctx->wpasup_ctrl = wpa_ctrl_open(WPA_SUPPLICANT_CONTROL_PATH);
+        WPALOG_INFO("try_open_wpa_control: %p\n", ctx->wpasup_ctrl);
+    }
+
+    return ctx->wpasup_ctrl != NULL;
+}
+
+static void close_wpa_control(struct wlan_context *ctx) {
+    if (ctx->wpasup_ctrl) {
+        wpa_ctrl_close(ctx->wpasup_ctrl);
+        ctx->wpasup_ctrl = NULL;
+    }
+}
+
+
+static int try_disconnect_wpa_control(struct wlan_context *ctx) {
+    const char * cmd = "DISCONNECT";
+    char buf[4096];
+    size_t len;
+    int ret;
+
+    try_open_wpa_control(ctx);
+
+    if (ctx->wpasup_ctrl) {
+        ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
+        return ret > 0;
+    }
+    return 1;
+}
+
+
 /* ------------------------------------------------------------------------- */
 /**
  * Called from icd when wlan is to be taken down.
@@ -629,6 +663,7 @@ static void wlan_destruct(gpointer * private)
     ENTER;
 
     wpaicd_free();
+    close_wpa_control(ctx);
     g_object_unref(ctx->gconf_client);
 
     EXIT;
@@ -702,6 +737,8 @@ gboolean icd_nw_init(struct icd_nw_api *network_api,
     wpaicd_set_state_change_cb(wlan_state_change_cb, (void *)context);
 
     wlan_set_state(context, STATE_IDLE);
+
+    try_open_wpa_control(context);
 
     /* TODO: Check if we can communicate with wpa_supplicant? */
     return TRUE;

@@ -34,4 +34,6 @@
 
 #define DBUS_PROPERTIES_INTERFACE_NAME "org.freedesktop.DBus.Properties"
 
+#define WPA_SUPPLICANT_CONTROL_PATH "/var/run/wpa_supplicant/wlan0"
+
 #endif /* _WPASUPPLICANT_DEFS_H_ */

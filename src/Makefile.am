@@ -21,6 +21,7 @@ LDADD = \
 
 CFLAGS = -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -Werror
 LDFLAGS = -avoid-version
+LDADD = /usr/lib/*/libwpa_client.a # There is no pkgconfig file
 
 plugindir = @icd_plugin_dir@
 plugin_LTLIBRARIES = libicd_network_wpasupplicant.la
