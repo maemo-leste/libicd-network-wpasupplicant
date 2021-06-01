@@ -29,7 +29,7 @@
 
 #include "wpaicd.h"
 
-#define TEST_INTERFACE_PATH WPA_DBUS_INTERFACES_OPATH "/1"
+#define TEST_INTERFACE_PATH WPA_DBUS_INTERFACES_OPATH "/0"
 
 static GDBusConnection *system_bus = NULL;
 static GDBusProxy *interface_proxy = NULL;
