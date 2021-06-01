@@ -1,3 +1,10 @@
+libicd-network-wpasupplicant (0.1.6) unstable; urgency=low
+
+  * Support hidden APs
+  * Switch to new interface path for wpa_supplicant (hacky fix)
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Tue, 01 Jun 2021 21:50:18 +0200
+
 libicd-network-wpasupplicant (0.1.5) unstable; urgency=low
 
   * Fix packaging and most of the divert
