@@ -136,6 +136,21 @@ static void close_wpa_control(struct wlan_context *ctx) {
 }
 
 
+static int try_scan_wpa_control(struct wlan_context *ctx) {
+    const char * cmd = "SCAN";
+    char buf[4096];
+    size_t len;
+    int ret;
+
+    try_open_wpa_control(ctx);
+
+    if (ctx->wpasup_ctrl) {
+        ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
+        return ret > 0;
+    }
+    return 1;
+}
+
 static int try_disconnect_wpa_control(struct wlan_context *ctx) {
     const char * cmd = "DISCONNECT";
     char buf[4096];
@@ -625,11 +640,8 @@ static void wlan_start_search(const gchar * network_type,
     ctx->search_cb = search_cb;
     ctx->search_cb_token = search_cb_token;
 
-    /* TODO: For hidden wlan, I think this should work: */
-    /* 1. Remove all networks but the connected one, if any */
-    /* 2. Add any gconf networks with hidden = true using wpaicd_add_network */
-    /* Then wpa_supplicant should scan hidden ssids */
-    int ret = wpaicd_initiate_scan();
+    //int ret = wpaicd_initiate_scan();
+    int ret = try_scan_wpa_control(ctx);
     if (ret == 0)
         goto done;
 
