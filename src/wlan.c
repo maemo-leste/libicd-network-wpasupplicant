@@ -146,7 +146,10 @@ static int try_scan_wpa_control(struct wlan_context *ctx) {
 
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
-        return ret > 0;
+        if (ret != 0) {
+            close_wpa_control(ctx);
+        }
+        return ret == 0;
     }
     return 1;
 }
@@ -161,7 +164,10 @@ static int try_disconnect_wpa_control(struct wlan_context *ctx) {
 
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
-        return ret > 0;
+        if (ret != 0) {
+            close_wpa_control(ctx);
+        }
+        return ret == 0;
     }
     return 1;
 }
