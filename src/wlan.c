@@ -122,13 +122,14 @@ static enum icd_nw_levels map_rssi(int rssi)
 static int try_open_wpa_control(struct wlan_context *ctx) {
     if (!ctx->wpasup_ctrl) {
         ctx->wpasup_ctrl = wpa_ctrl_open(WPA_SUPPLICANT_CONTROL_PATH);
-        WPALOG_INFO("try_open_wpa_control: %p\n", ctx->wpasup_ctrl);
+        WPALOG_CRIT("try_open_wpa_control: %p\n", ctx->wpasup_ctrl);
     }
 
     return ctx->wpasup_ctrl != NULL;
 }
 
 static void close_wpa_control(struct wlan_context *ctx) {
+    WPALOG_CRIT("close_wpa_control: %p\n", ctx->wpasup_ctrl);
     if (ctx->wpasup_ctrl) {
         wpa_ctrl_close(ctx->wpasup_ctrl);
         ctx->wpasup_ctrl = NULL;
@@ -147,6 +148,7 @@ static int try_scan_wpa_control(struct wlan_context *ctx) {
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
         if (ret != 0) {
+            WPALOG_CRIT("try_scan_wpa_control failed with %d\n", ret);
             close_wpa_control(ctx);
         }
         return ret == 0;
@@ -165,6 +167,7 @@ static int try_disconnect_wpa_control(struct wlan_context *ctx) {
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
         if (ret != 0) {
+            WPALOG_CRIT("try_disconnect_wpa_control failed with %d\n", ret);
             close_wpa_control(ctx);
         }
         return ret == 0;
