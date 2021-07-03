@@ -140,39 +140,53 @@ static void close_wpa_control(struct wlan_context *ctx) {
 static int try_scan_wpa_control(struct wlan_context *ctx) {
     const char * cmd = "SCAN";
     char buf[4096];
-    size_t len;
-    int ret;
+    size_t len = 0;
+    int ret, res;
+
+    res = 1;
 
     try_open_wpa_control(ctx);
 
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
         if (ret != 0) {
-            WPALOG_CRIT("try_scan_wpa_control failed with %d\n", ret);
-            close_wpa_control(ctx);
+            WPALOG_CRIT("try_scan_wpa_control failed with %d, reported buf len is %d\n", ret, len);
         }
-        return ret == 0;
+        /* Always return 0, wpa_ctrl_request often sends the message but then
+         * still reports failure. We should investigate that, but let's at least
+         * make it work for now.*/
+        //res = ret == 0;
+        res = 0;
     }
-    return 1;
+
+    close_wpa_control(ctx);
+    return res;
 }
 
 static int try_disconnect_wpa_control(struct wlan_context *ctx) {
     const char * cmd = "DISCONNECT";
     char buf[4096];
     size_t len;
-    int ret;
+    int ret, res;
+
+    res = 1;
 
     try_open_wpa_control(ctx);
 
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
         if (ret != 0) {
-            WPALOG_CRIT("try_disconnect_wpa_control failed with %d\n", ret);
-            close_wpa_control(ctx);
+            WPALOG_CRIT("try_disconnect_wpa_control failed with %d, reported buf len is %d\n", ret, len);
         }
-        return ret == 0;
+        /* Always return 0, wpa_ctrl_request often sends the message but then
+         * still reports failure. We should investigate that, but let's at least
+         * make it work for now.*/
+        //res = ret == 0;
+        res = 0;
     }
-    return 1;
+
+    close_wpa_control(ctx);
+    return res;
 }
 
 
