@@ -1,3 +1,9 @@
+libicd-network-wpasupplicant (0.1.9) unstable; urgency=low
+
+  * Hotfix for N900 wifi support, fall back to dbus-based scans
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Thu, 15 Jul 2021 23:59:26 +0200
+
 libicd-network-wpasupplicant (0.1.8) unstable; urgency=low
 
   * Ignore wpa_ctrl_request returning failure when it works just fine, should
