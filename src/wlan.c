@@ -150,7 +150,7 @@ static int try_scan_wpa_control(struct wlan_context *ctx) {
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
         if (ret != 0) {
-            WPALOG_CRIT("try_scan_wpa_control failed with %d, reported buf len is %ld\n", ret, len);
+            WPALOG_CRIT("try_scan_wpa_control failed with %d, reported buf len is %zu\n", ret, len);
         }
         /* Always return 0, wpa_ctrl_request often sends the message but then
          * still reports failure. We should investigate that, but let's at least
@@ -176,7 +176,7 @@ static int try_disconnect_wpa_control(struct wlan_context *ctx) {
     if (ctx->wpasup_ctrl) {
         ret = wpa_ctrl_request(ctx->wpasup_ctrl, cmd, strlen(cmd), buf, &len, NULL);
         if (ret != 0) {
-            WPALOG_CRIT("try_disconnect_wpa_control failed with %d, reported buf len is %ld\n", ret, len);
+            WPALOG_CRIT("try_disconnect_wpa_control failed with %d, reported buf len is %zu\n", ret, len);
         }
         /* Always return 0, wpa_ctrl_request often sends the message but then
          * still reports failure. We should investigate that, but let's at least
@@ -663,8 +663,9 @@ static void wlan_start_search(const gchar * network_type,
     ctx->search_cb = search_cb;
     ctx->search_cb_token = search_cb_token;
 
-    //int ret = wpaicd_initiate_scan();
     int ret = try_scan_wpa_control(ctx);
+    if (ret == 0)
+        ret = wpaicd_initiate_scan();
     if (ret == 0)
         goto done;
 
