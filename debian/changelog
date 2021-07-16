@@ -1,3 +1,9 @@
+libicd-network-wpasupplicant (0.1.10) unstable; urgency=low
+
+  * Backing out hidden AP changes, too many things break.
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Fri, 16 Jul 2021 11:54:05 +0200
+
 libicd-network-wpasupplicant (0.1.9) unstable; urgency=low
 
   * Hotfix for N900 wifi support, fall back to dbus-based scans
