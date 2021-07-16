@@ -663,9 +663,17 @@ static void wlan_start_search(const gchar * network_type,
     ctx->search_cb = search_cb;
     ctx->search_cb_token = search_cb_token;
 
+    /* This is broken in several ways, first of all libwpa_client randomly
+     * returns failure when actually everything went fine. And then we have to
+     * ignore it's bad results, which means we cannot fall back to dbus. On top
+     * of that, the n900 can *only* scan using dbus, the libwpa_client / wpa_cli
+     * scan commands just ... fail with -EINVAL */
+#if 0
     int ret = try_scan_wpa_control(ctx);
-    if (ret == 0)
+    if (ret != 0)
         ret = wpaicd_initiate_scan();
+#endif
+    int ret = wpaicd_initiate_scan();
     if (ret == 0)
         goto done;
 
