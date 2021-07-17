@@ -16,22 +16,6 @@ Depends: icd2 (>= 0.55), ${shlibs:Depends}, icd2-network-wpasupplicant-config, l
 Description: ICd2 plugin for WLAN networking
  The WLAN plugin for ICd2 that provides WLAN networking
 
-Package: libicd-network-wpasupplicant-dbus-common
-Section: net
-Architecture: any
-Conflicts: libicd-network-wpasupplicant-dbus-n900
-Depends: icd2 (>= 0.55), ${shlibs:Depends}, icd2-network-wpasupplicant-config, libicd-network-ipv4
-Description: DBus service for wpa supplicant
- The DBus service for starting wpa_supplicant (common devices)
-
-Package: libicd-network-wpasupplicant-dbus-n900
-Section: n900
-Architecture: any
-Conflicts: libicd-network-wpasupplicant-dbus-common
-Depends: icd2 (>= 0.55), ${shlibs:Depends}, icd2-network-wpasupplicant-config, libicd-network-ipv4
-Description: DBus service for wpa supplicant
- The DBus service for starting wpa_supplicant (Nokia N900)
-
 Package: libicd-network-wpasupplicant-dev
 Section: devel
 Architecture: any
@@ -47,3 +31,5 @@ Description: WLAN networking components configuration
  The WLAN plugin configuration pkg that is needed by wpasupplicant network
  module (this is the schema file containing wpasupplicant
  and ipv6 module configuration)
+
+

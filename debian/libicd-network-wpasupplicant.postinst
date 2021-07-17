@@ -2,17 +2,15 @@
 
 funcs="/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service"
 
-dpkg-divert --add --package libicd-network-wpasupplicant-dbus-common \
+dpkg-divert --add --package libicd-network-wpasupplicant \
 	--divert "${funcs}.diverted" --rename "$funcs"
 
-cat << EOF > "$funcs"
+cat > "$funcs" << EOF
 [D-BUS Service]
 Name=fi.w1.wpa_supplicant1
 Exec=/sbin/wpa_supplicant -s -P /run/wpa_supplicant.wlan0.pid -i wlan0 -u -D nl80211,wext -c /etc/wpa_supplicant/wpa_supplicant.conf
 User=root
 SystemdService=wpa_supplicant.service
 EOF
-
-#DEBHELPER#
 
 exit 0
