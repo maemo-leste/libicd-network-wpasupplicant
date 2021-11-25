@@ -775,6 +775,8 @@ gboolean icd_nw_init(struct icd_nw_api *network_api,
         return FALSE;
     }
 
+    context->wpasup_ctrl = NULL;
+
     network_api->search_interval = 10;
     network_api->search_lifetime = 2 * network_api->search_interval;    // XXX: fixme
 
