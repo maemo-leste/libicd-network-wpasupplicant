@@ -542,6 +542,11 @@ static void wlan_search_network_added_cb(BssInfo * info, void *data)
             if (done)
                 goto next;
 
+            if (!net->type) {
+                WPALOG_ERR(WLAN "%s", "GConf network entry has invalid type\n");
+                goto next;
+            }
+
             if (!(strncmp(net->type, "WLAN_INFRA", 10) == 0) ||
                  (strncmp(net->type, "WLAN_ADHOC", 10) == 0)) {
                 goto next;
