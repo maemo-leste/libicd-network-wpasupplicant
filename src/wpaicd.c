@@ -198,7 +198,11 @@ static GError *get_bss_info(const gchar * bss_path, BssInfo * info)
         return err;
     }
 #ifdef _WPA_ICD_DEBUG
-    WPALOG_DEBUG("bss info: %s", g_variant_print(bss, TRUE));
+    {
+        gchar* tmp = g_variant_print(bss, TRUE);
+        WPALOG_DEBUG("bss info: %s", tmp);
+        g_free(tmp);
+    }
 #endif
     GVariant *bss_info = g_variant_get_child_value(bss, 0);
 
@@ -544,7 +548,11 @@ int wpaicd_select_network(const char *network_path)
 static void property_changed(GVariant * params)
 {
 #ifdef _WPA_ICD_DEBUG
-    WPALOG_DEBUG("properties_changed: %s", g_variant_print(params, TRUE));
+    {
+        gchar *tmp = g_variant_print(params, TRUE);
+        WPALOG_DEBUG("properties_changed: %s", tmp);
+        g_free(tmp);
+    }
 #endif
 
     GVariant *d = NULL;
@@ -586,8 +594,9 @@ static void on_scan_done(GDBusProxy * proxy,
     /* TODO: Ensure everything is freed, GError checking, Gerror re-initialisation, etc */
     /* TODO: Ensure that we properly deal with errors / missing values */
 
-    WPALOG_DEBUG("on_scan_done. params: %s",
-            g_variant_print(parameters, TRUE));
+    gchar *tmp = g_variant_print(parameters, TRUE);
+    WPALOG_DEBUG("on_scan_done. params: %s", tmp);
+    g_free(tmp);
 
     GError *error = NULL;
 
