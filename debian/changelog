@@ -1,3 +1,9 @@
+libicd-network-wpasupplicant (0.1.14) unstable; urgency=low
+
+  * Fix double variable usage
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Tue, 29 Nov 2022 20:31:16 +0100
+
 libicd-network-wpasupplicant (0.1.13) unstable; urgency=low
 
   * Fix problem with invalid network entries
