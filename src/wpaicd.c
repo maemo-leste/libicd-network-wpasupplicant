@@ -594,9 +594,9 @@ static void on_scan_done(GDBusProxy * proxy,
     /* TODO: Ensure everything is freed, GError checking, Gerror re-initialisation, etc */
     /* TODO: Ensure that we properly deal with errors / missing values */
 
-    gchar *tmp = g_variant_print(parameters, TRUE);
-    WPALOG_DEBUG("on_scan_done. params: %s", tmp);
-    g_free(tmp);
+    gchar *tmp_param = g_variant_print(parameters, TRUE);
+    WPALOG_DEBUG("on_scan_done. params: %s", tmp_param);
+    g_free(tmp_param);
 
     GError *error = NULL;
 
