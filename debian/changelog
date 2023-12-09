@@ -1,3 +1,13 @@
+libicd-network-wpasupplicant (0.1.15) unstable; urgency=low
+
+  * Attempt fix some issues with abitrary failures during connection,
+    where association timeout counters were not reset and potentially the
+    network getting cleared because of a scan (not clear if this actually
+    happens). On the Droid 4 the problems seems to be on a kernel level,
+    though.
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sat, 09 Dec 2023 20:46:41 +0100
+
 libicd-network-wpasupplicant (0.1.14) unstable; urgency=low
 
   * Fix double variable usage
