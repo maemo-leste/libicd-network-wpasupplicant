@@ -443,7 +443,12 @@ static void wlan_state_change_cb(const char *state, void *data)
         ctx->stored_network_id = NULL;
         ctx->stored_network_attrs = 0;
 
+        if (ctx->g_association_timer)
+            g_source_remove(ctx->g_association_timer);
     } else if (strcmp(state, "inactive") == 0) {
+        if (ctx->g_association_timer)
+            g_source_remove(ctx->g_association_timer);
+
         wlan_set_state(ctx, STATE_IDLE);
     } else if (strcmp(state, "completed") == 0) {
         if (ctx->g_association_timer)
