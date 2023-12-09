@@ -30,7 +30,7 @@
  * (gconfmap including wpaicd.h) */
 #include "gconfmap.h"
 
-#if 0
+#if 1
 #define _WPA_ICD_DEBUG
 #endif
 
