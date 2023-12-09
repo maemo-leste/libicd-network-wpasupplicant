@@ -668,8 +668,13 @@ static void wlan_start_search(const gchar * network_type,
     if (ctx->state == STATE_IDLE) {
         wpaicd_remove_all_networks();
         try_disconnect_wpa_control(ctx);
-    } else {
+    } else if (ctx->state == STATE_CONNECTED) {
+        /* TODO: Let's maybe just not remove networks when we're trying to
+         * connect, or at least make really sure we're not removing the network
+         * we're connecting to. */
         wpaicd_remove_noncurrent_networks();
+    } else {
+        /* Do not clear networks when connecting or disconnecting */
     }
     add_hidden_networks(ctx);
 
