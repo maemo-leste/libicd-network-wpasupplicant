@@ -620,11 +620,11 @@ static void on_scan_done(GDBusProxy * proxy,
         return;
     }
 
-    GVariant *tmp3 = g_variant_get_child_value(bsss, 0);
-    GVariant *tmp2 = g_variant_get_child_value(tmp3, 0);
+    GVariant *bsss_var = g_variant_get_child_value(bsss, 0);
+    GVariant *bsss_list= g_variant_get_child_value(bsss_var, 0);
 
     GVariantIter *iter;
-    iter = g_variant_iter_new(tmp2);
+    iter = g_variant_iter_new(bsss_list);
 
     for (unsigned int i = 0; i < g_variant_iter_n_children(iter); i++) {
         GVariant *val;
@@ -654,8 +654,8 @@ static void on_scan_done(GDBusProxy * proxy,
     }
 
     g_variant_iter_free(iter);
-    g_variant_unref(tmp3);
-    g_variant_unref(tmp2);
+    g_variant_unref(bsss_var);
+    g_variant_unref(bsss_list);
     g_variant_unref(bsss);
 
     if (scan_done_cb) {
