@@ -430,6 +430,10 @@ static void wlan_state_change_cb(const char *state, void *data)
     if (strcmp(state, "associating") == 0) {
         wlan_set_state(ctx, STATE_CONNECTING);
 
+        /* Cancel previous timer, if any */
+        if (ctx->g_association_timer)
+            g_source_remove(ctx->g_association_timer);
+
         ctx->g_association_timer = g_timeout_add_seconds(30, wlan_associate_timeout, (void*)ctx);
     } else if (strcmp(state, "disconnected") == 0) {
         wlan_set_state(ctx, STATE_IDLE);
