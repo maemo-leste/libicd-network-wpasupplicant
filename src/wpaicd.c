@@ -197,11 +197,29 @@ static GError *get_bss_info(const gchar * bss_path, BssInfo * info)
     if (err != NULL) {
         return err;
     }
+
+    GError *err2 = NULL;
+    GVariant *sigpoll = g_dbus_connection_call_sync(system_bus,
+                                                WPA_DBUS_SERVICE,
+                                                "/fi/w1/wpa_supplicant1/Interfaces/0",
+                                                WPA_DBUS_INTERFACES_INTERFACE,
+                                                "SignalPoll",
+                                                NULL,
+                                                NULL,
+                                                G_DBUS_CALL_FLAGS_NONE,
+                                                -1,
+                                                NULL,
+                                                &err2);
 #ifdef _WPA_ICD_DEBUG
     {
         gchar* tmp = g_variant_print(bss, TRUE);
         WPALOG_DEBUG("bss info: %s", tmp);
         g_free(tmp);
+        if (err2 == NULL) {
+            gchar* tmp2 = g_variant_print(sigpoll, TRUE);
+            WPALOG_DEBUG("SignalPoll data: %s", tmp2);
+            g_free(tmp2);
+        }
     }
 #endif
     GVariant *bss_info = g_variant_get_child_value(bss, 0);
@@ -212,8 +230,18 @@ static GError *get_bss_info(const gchar * bss_path, BssInfo * info)
 
     gchar *mode;
 
-    _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Signal", &info->signal,
-                               G_VARIANT_TYPE_INT16, "n")
+    /* Get up to date signal value from SignalPoll() if available */
+    if (err2 == NULL) {
+        GVariant *sigpoll_outer = g_variant_get_child_value(sigpoll, 0);
+        GVariant *sigpoll_inner = g_variant_get_child_value(sigpoll_outer, 0);
+        g_variant_lookup(sigpoll_inner, "rssi", "i", &info->signal);
+        g_variant_unref(sigpoll_outer);
+        g_variant_unref(sigpoll_inner);
+    } else {
+        _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Signal", &info->signal,
+                                   G_VARIANT_TYPE_INT16, "n")
+        g_error_free(err2);
+    }
     _BSS_SIMPLE_INFO_FROM_DICT(&bss_info_dict, "Frequency",
                                &info->frequency, G_VARIANT_TYPE_UINT16, "q")
     /* ad-hoc, infrastructure */
@@ -249,6 +277,7 @@ static GError *get_bss_info(const gchar * bss_path, BssInfo * info)
     /* Clean up */
     g_variant_unref(bss_info);
     g_variant_unref(bss);
+    g_variant_unref(sigpoll);
 
     return NULL;
 }
