@@ -101,7 +101,7 @@ typedef struct {
     gchar *ssid;
     gsize ssid_len;
 
-    gint16 signal;
+    gint32 signal;
 
     gchar *mac_addr;
     gsize mac_addr_len;
