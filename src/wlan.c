@@ -436,19 +436,19 @@ static void wlan_state_change_cb(const char *state, void *data)
 
         ctx->g_association_timer = g_timeout_add_seconds(30, wlan_associate_timeout, (void*)ctx);
     } else if (strcmp(state, "disconnected") == 0) {
-        wlan_set_state(ctx, STATE_IDLE);
 
-        ctx->close_cb(ICD_NW_ERROR,
-                      ICD_DBUS_ERROR_NETWORK_ERROR,
-                      ctx->stored_network_type,
-                      ctx->stored_network_attrs, ctx->stored_network_id);
+        if (ctx->state == STATE_CONNECTED) {
+            wlan_set_state(ctx, STATE_IDLE);
 
-        ctx->stored_network_type = NULL;
-        ctx->stored_network_id = NULL;
-        ctx->stored_network_attrs = 0;
+            ctx->close_cb(ICD_NW_ERROR,
+                          ICD_DBUS_ERROR_NETWORK_ERROR,
+                          ctx->stored_network_type,
+                          ctx->stored_network_attrs, ctx->stored_network_id);
 
-        if (ctx->g_association_timer)
-            g_source_remove(ctx->g_association_timer);
+            ctx->stored_network_type = NULL;
+            ctx->stored_network_id = NULL;
+            ctx->stored_network_attrs = 0;
+        }
     } else if (strcmp(state, "inactive") == 0) {
         if (ctx->g_association_timer)
             g_source_remove(ctx->g_association_timer);
