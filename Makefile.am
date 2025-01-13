@@ -25,8 +25,7 @@ EXTRA_DIST = \
 	debian/icd2-network-wpasupplicant-config.install \
 	debian/icd2-network-wpasupplicant-config.postinst
 
-# dh_gconf does not work due to missing scripts, add schema manually
-gconfschemasdir = $(sysconfdir)/gconf/schemas
+gconfschemasdir = $(GCONF_SCHEMA_FILE_DIR)
 dist_gconfschemas_DATA = libicd-network-wpasupplicant.schemas
 
 # backup should really provide its directory in its .pc file
