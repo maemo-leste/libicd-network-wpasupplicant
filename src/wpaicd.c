@@ -43,31 +43,6 @@ static void *scan_done_data = NULL;
 static StateChange *state_change_cb = NULL;
 static void *state_change_data = NULL;
 
-static void print_bss_info(BssInfo info)
-{
-    /* Print */
-    WPALOG_DEBUG("Signal: %d", info.signal);
-    WPALOG_DEBUG("Signal: %d", info.frequency);
-
-    if (info.infrastructure) {
-        WPALOG_DEBUG("mode: infrastructure");
-    } else {
-        WPALOG_DEBUG("mode: ad-hoc");
-    }
-
-    gchar *ssid = calloc((info.ssid_len + 1), sizeof(char));
-    memcpy(ssid, info.ssid, info.ssid_len);
-    ssid[info.ssid_len] = '\0';
-    WPALOG_DEBUG("ssid: %s", ssid);
-    free(ssid);
-
-    WPALOG_DEBUG("mac_addr: ");
-    for (gsize i = 0; i < info.mac_addr_len; i += 1) {
-        // XXX: this prints a newline every time...
-        WPALOG_DEBUG("%2x", info.mac_addr[i]);
-    }
-}
-
 static void set_wpa_properties(GVariant * wpa, BssInfo * info)
 {
     GVariantDict wpa_dict;
@@ -836,6 +811,32 @@ void wpaicd_set_state_change_cb(StateChange * cb, void *data)
 }
 
 #if 0
+
+static void print_bss_info(BssInfo info)
+{
+    /* Print */
+    WPALOG_DEBUG("Signal: %d", info.signal);
+    WPALOG_DEBUG("Signal: %d", info.frequency);
+
+    if (info.infrastructure) {
+        WPALOG_DEBUG("mode: infrastructure");
+    } else {
+        WPALOG_DEBUG("mode: ad-hoc");
+    }
+
+    gchar *ssid = calloc((info.ssid_len + 1), sizeof(char));
+    memcpy(ssid, info.ssid, info.ssid_len);
+    ssid[info.ssid_len] = '\0';
+    WPALOG_DEBUG("ssid: %s", ssid);
+    free(ssid);
+
+    WPALOG_DEBUG("mac_addr: ");
+    for (gsize i = 0; i < info.mac_addr_len; i += 1) {
+        // XXX: this prints a newline every time...
+        WPALOG_DEBUG("%2x", info.mac_addr[i]);
+    }
+}
+
 void wpaicd_test_network_added_cb(BssInfo * info, void *data)
 {
     print_bss_info(*info);
