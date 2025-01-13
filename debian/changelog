@@ -1,3 +1,9 @@
+libicd-network-wpasupplicant (0.1.18) unstable; urgency=low
+
+  * packaging fixes
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 13 Jan 2025 15:52:44 +0200
+
 libicd-network-wpasupplicant (0.1.17) unstable; urgency=low
 
   * Ignore "disconnected" events unless we are connected
