@@ -45,7 +45,6 @@ endif
 maintainer-clean-local:
 	-rm -rf debian/build debian/tmp \
 		debian/libicd-network-wpasupplicant \
-		debian/libicd-network-wpasupplicant-dbg \
 		debian/icd2-network-wpasupplicant-config
 
 deb: dist
