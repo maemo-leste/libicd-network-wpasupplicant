@@ -1,2 +1,2 @@
-libicd-network-wpasupplicant.schemas usr/share/gconf/schemas
+etc/gconf/schemas/libicd-network-wpasupplicant.schemas
 etc/osso-backup/restore.d/always
