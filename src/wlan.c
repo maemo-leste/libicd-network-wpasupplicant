@@ -407,6 +407,23 @@ static gboolean wlan_associate_timeout(void *data) {
     return FALSE;
 }
 
+static void stop_assoc_timer(struct wlan_context *ctx)
+{
+    if (ctx->g_association_timer) {
+        g_source_remove(ctx->g_association_timer);
+        ctx->g_association_timer = 0;
+    }
+}
+
+static void start_assoc_timer(struct wlan_context *ctx)
+{
+    /* Cancel previous timer, if any */
+    stop_assoc_timer(ctx);
+
+    ctx->g_association_timer =
+            g_timeout_add_seconds(30, wlan_associate_timeout, (void*)ctx);
+}
+
 static void wlan_state_change_cb(const char *state, void *data)
 {
     struct wlan_context *ctx = get_wlan_context_from_wpaicd(data);
@@ -429,12 +446,7 @@ static void wlan_state_change_cb(const char *state, void *data)
 
     if (strcmp(state, "associating") == 0) {
         wlan_set_state(ctx, STATE_CONNECTING);
-
-        /* Cancel previous timer, if any */
-        if (ctx->g_association_timer)
-            g_source_remove(ctx->g_association_timer);
-
-        ctx->g_association_timer = g_timeout_add_seconds(30, wlan_associate_timeout, (void*)ctx);
+        start_assoc_timer(ctx);
     } else if (strcmp(state, "disconnected") == 0) {
 
         if (ctx->state == STATE_CONNECTED) {
@@ -448,15 +460,13 @@ static void wlan_state_change_cb(const char *state, void *data)
             ctx->stored_network_type = NULL;
             ctx->stored_network_id = NULL;
             ctx->stored_network_attrs = 0;
-        }
+        } else
+            start_assoc_timer(ctx);
     } else if (strcmp(state, "inactive") == 0) {
-        if (ctx->g_association_timer)
-            g_source_remove(ctx->g_association_timer);
-
+        stop_assoc_timer (ctx);
         wlan_set_state(ctx, STATE_IDLE);
     } else if (strcmp(state, "completed") == 0) {
-        if (ctx->g_association_timer)
-            g_source_remove(ctx->g_association_timer);
+        stop_assoc_timer(ctx);
 
         if (ctx->link_up_cb) {
             WPALOG_DEBUG(WLAN "SENDING SUCCESS NEXT LAYER");
