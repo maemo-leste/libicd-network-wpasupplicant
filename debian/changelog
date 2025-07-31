@@ -1,3 +1,9 @@
+libicd-network-wpasupplicant (0.1.20) unstable; urgency=low
+
+  * start assoc timer on 'disconnected' event
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Thu, 31 Jul 2025 05:58:29 +0300
+
 libicd-network-wpasupplicant (0.1.19) unstable; urgency=low
 
   * Attempt to fix never ending attempts to connect (by Sicelo)
